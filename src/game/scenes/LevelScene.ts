@@ -18,6 +18,7 @@ import { InputSystem } from '../systems/InputSystem';
 import { LevelLoader } from '../systems/LevelLoader';
 import { ParticleSystem } from '../systems/ParticleSystem';
 import { ScoreSystem } from '../systems/ScoreSystem';
+import { didHitBlockFromBelow } from '../systems/headHit';
 import { getArcadeBody } from '../utils/assertions';
 import { publishGameState } from '../utils/debugState';
 import { secondsFromMs } from '../utils/timers';
@@ -270,8 +271,7 @@ export class LevelScene extends Phaser.Scene {
     const hitFromBelow =
       blockBody instanceof Phaser.Physics.Arcade.StaticBody &&
       this.player.y > terrainObject.y &&
-      playerBody.top >= blockBody.bottom - 16 &&
-      (playerBody.blocked.up || playerBody.touching.up || Math.abs(playerBody.velocity.y) < 8);
+      didHitBlockFromBelow(playerBody, blockBody);
 
     if (!hitFromBelow) {
       return;

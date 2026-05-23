@@ -140,9 +140,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const body = getArcadeBody(this);
     const bottom = body.bottom;
     this.setScale(1, 2);
-    body.setSize(22, 68, false);
-    body.setOffset(5, -24);
+    body.setSize(22, 34, false);
+    body.setOffset(5, 8);
+    body.updateFromGameObject();
     this.y -= Math.max(0, body.bottom - bottom);
+    body.updateFromGameObject();
     return true;
   }
 
@@ -152,6 +154,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const body = getArcadeBody(this);
     body.setSize(22, 34, false);
     body.setOffset(5, 8);
+    body.updateFromGameObject();
   }
 
   private applyHorizontalMovement(
