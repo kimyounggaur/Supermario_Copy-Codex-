@@ -123,16 +123,27 @@ export class BootScene extends Phaser.Scene {
     }
 
     graphics.clear();
-    graphics.fillStyle(0xfff4a6, 0.25);
-    graphics.fillCircle(16, 16, 15);
-    graphics.fillStyle(0xffdf5e, 1);
-    graphics.fillTriangle(16, 1, 28, 15, 16, 31);
-    graphics.fillStyle(0xfff8ca, 1);
-    graphics.fillTriangle(16, 1, 16, 31, 4, 15);
-    graphics.lineStyle(2, 0xc89122, 0.75);
-    graphics.strokeTriangle(16, 1, 28, 15, 16, 31);
-    graphics.strokeTriangle(16, 1, 4, 15, 16, 31);
-    graphics.generateTexture('light-seed-shard', 32, 32);
+    graphics.fillStyle(0xffe07a, 0.22);
+    graphics.fillCircle(20, 20, 19);
+    graphics.fillStyle(0xb46f00, 1);
+    graphics.fillCircle(22, 20, 17);
+    graphics.fillStyle(0xffc72e, 1);
+    graphics.fillCircle(19, 20, 17);
+    graphics.fillStyle(0xffe58c, 1);
+    graphics.fillCircle(17, 18, 12);
+    graphics.lineStyle(3, 0x9d6500, 0.8);
+    graphics.strokeCircle(19, 20, 15);
+    graphics.lineStyle(2, 0xfff4bf, 0.9);
+    graphics.strokeCircle(17, 18, 10);
+    graphics.fillStyle(0xf5ad00, 1);
+    graphics.fillEllipse(20, 20, 10, 18);
+    graphics.fillStyle(0xfff0a8, 1);
+    graphics.fillEllipse(18, 17, 5, 9);
+    graphics.fillStyle(0xd78a00, 1);
+    graphics.fillEllipse(22, 23, 5, 9);
+    graphics.fillStyle(0xffffff, 0.55);
+    graphics.fillEllipse(12, 9, 14, 4);
+    graphics.generateTexture('light-seed-shard', 40, 40);
   }
 
   private drawOrb(graphics: Phaser.GameObjects.Graphics): void {
