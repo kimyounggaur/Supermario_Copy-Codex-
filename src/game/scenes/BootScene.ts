@@ -23,6 +23,8 @@ export class BootScene extends Phaser.Scene {
     this.drawTerrain(graphics, 'terrain-grass', 0x66bd63, 0x7d6b4d, 0xf4fff4);
     this.drawTerrain(graphics, 'terrain-stone', 0xa7b8bd, 0x718389, 0xe6f3f5);
     this.drawTerrain(graphics, 'terrain-cloud', 0xf7fbff, 0xc3e5f5, 0xffffff);
+    this.drawSkyBrick(graphics);
+    this.drawRuneBox(graphics);
     this.drawMovingPlatform(graphics);
     this.drawSeed(graphics);
     this.drawOrb(graphics);
@@ -115,6 +117,60 @@ export class BootScene extends Phaser.Scene {
     graphics.lineStyle(2, 0xffffff, 0.75);
     graphics.strokeRoundedRect(3, 3, 90, 16, 7);
     graphics.generateTexture('moving-platform', 96, 24);
+  }
+
+  private drawSkyBrick(graphics: Phaser.GameObjects.Graphics): void {
+    if (this.textures.exists('terrain-sky-brick')) {
+      return;
+    }
+
+    graphics.clear();
+    graphics.fillStyle(0x7d8f9b, 1);
+    graphics.fillRoundedRect(0, 0, 44, 44, 4);
+    graphics.fillStyle(0x9fb5c4, 1);
+    graphics.fillRoundedRect(3, 3, 38, 38, 4);
+    graphics.fillStyle(0xcde1ed, 0.6);
+    graphics.fillRoundedRect(5, 4, 34, 8, 3);
+    graphics.lineStyle(3, 0x52646f, 1);
+    graphics.lineBetween(0, 15, 44, 15);
+    graphics.lineBetween(0, 31, 44, 31);
+    graphics.lineBetween(16, 0, 16, 15);
+    graphics.lineBetween(29, 15, 29, 31);
+    graphics.lineBetween(16, 31, 16, 44);
+    graphics.lineStyle(2, 0xe7f7ff, 0.55);
+    graphics.strokeRoundedRect(2, 2, 40, 40, 4);
+    graphics.generateTexture('terrain-sky-brick', 44, 44);
+  }
+
+  private drawRuneBox(graphics: Phaser.GameObjects.Graphics): void {
+    if (this.textures.exists('terrain-rune-box')) {
+      return;
+    }
+
+    graphics.clear();
+    graphics.fillStyle(0x9a6b00, 1);
+    graphics.fillRoundedRect(0, 0, 44, 44, 5);
+    graphics.fillStyle(0xf2bc2e, 1);
+    graphics.fillRoundedRect(3, 3, 38, 38, 5);
+    graphics.fillStyle(0xffdf61, 1);
+    graphics.fillRoundedRect(6, 5, 30, 28, 4);
+    graphics.fillStyle(0xfff1a8, 0.75);
+    graphics.fillEllipse(15, 9, 20, 5);
+    graphics.lineStyle(2, 0x8a6100, 0.85);
+    graphics.strokeRoundedRect(3, 3, 38, 38, 5);
+    graphics.lineStyle(3, 0xffffff, 0.85);
+    graphics.lineBetween(22, 11, 29, 18);
+    graphics.lineBetween(29, 18, 22, 25);
+    graphics.lineBetween(22, 25, 15, 18);
+    graphics.lineBetween(15, 18, 22, 11);
+    graphics.fillStyle(0xffffff, 0.95);
+    graphics.fillCircle(22, 33, 3);
+    graphics.fillStyle(0x725100, 0.9);
+    graphics.fillCircle(8, 8, 3);
+    graphics.fillCircle(36, 8, 3);
+    graphics.fillCircle(8, 36, 3);
+    graphics.fillCircle(36, 36, 3);
+    graphics.generateTexture('terrain-rune-box', 44, 44);
   }
 
   private drawSeed(graphics: Phaser.GameObjects.Graphics): void {

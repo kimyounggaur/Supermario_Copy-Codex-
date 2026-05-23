@@ -67,7 +67,7 @@ The score system awards points for Light Seed Shards, defeated enemies, Breeze O
 
 Edit `src/game/data/levels/level1.ts`. The level is made from plain TypeScript data:
 
-- `terrain`: solid rectangles
+- `terrain`: solid rectangles, including grass, stone, cloud, sky brick, and rune box blocks
 - `movingPlatforms`: platform rectangles with `from`, `to`, and `speed`
 - `collectibles`: Light Seed Shards
 - `powerUps`: Breeze Orbs with duration

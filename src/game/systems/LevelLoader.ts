@@ -128,6 +128,10 @@ export class LevelLoader {
         return 'terrain-stone';
       case 'cloud':
         return 'terrain-cloud';
+      case 'skyBrick':
+        return 'terrain-sky-brick';
+      case 'runeBox':
+        return 'terrain-rune-box';
     }
   }
 }

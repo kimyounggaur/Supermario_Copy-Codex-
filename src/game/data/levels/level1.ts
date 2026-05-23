@@ -1,4 +1,56 @@
-import type { LevelData } from '../../types';
+import type { LevelData, TerrainDef } from '../../types';
+
+type FloatingBlockKind = Extract<TerrainDef['kind'], 'skyBrick' | 'runeBox'>;
+
+const floatingBlockSize = 44;
+
+function floatingBlockCluster(
+  id: string,
+  startX: number,
+  y: number,
+  pattern: FloatingBlockKind[]
+): TerrainDef[] {
+  return pattern.map((kind, index) => ({
+    id: `${id}-${index + 1}`,
+    kind,
+    x: startX + index * floatingBlockSize,
+    y,
+    width: floatingBlockSize,
+    height: floatingBlockSize
+  }));
+}
+
+const floatingBlocks: TerrainDef[] = [
+  ...floatingBlockCluster('tutorial-floating-block', 930, 430, [
+    'skyBrick',
+    'runeBox',
+    'skyBrick'
+  ]),
+  ...floatingBlockCluster('seed-floating-block', 1695, 365, [
+    'skyBrick',
+    'skyBrick',
+    'runeBox',
+    'skyBrick'
+  ]),
+  ...floatingBlockCluster('patrol-floating-block', 2460, 445, [
+    'skyBrick',
+    'runeBox',
+    'skyBrick',
+    'runeBox',
+    'skyBrick'
+  ]),
+  ...floatingBlockCluster('checkpoint-floating-block', 3815, 420, [
+    'skyBrick',
+    'runeBox',
+    'skyBrick'
+  ]),
+  ...floatingBlockCluster('final-floating-block', 4560, 385, [
+    'skyBrick',
+    'skyBrick',
+    'runeBox',
+    'skyBrick'
+  ])
+];
 
 export const level1: LevelData = {
   id: 'level-1-wind-island',
@@ -26,7 +78,8 @@ export const level1: LevelData = {
     { id: 'power-ledge', kind: 'stone', x: 4020, y: 515, width: 240, height: 34 },
     { id: 'final-platform-01', kind: 'cloud', x: 4400, y: 570, width: 220, height: 34 },
     { id: 'final-platform-02', kind: 'cloud', x: 4690, y: 500, width: 220, height: 34 },
-    { id: 'finish-ground', kind: 'grass', x: 5110, y: 660, width: 580, height: 96 }
+    { id: 'finish-ground', kind: 'grass', x: 5110, y: 660, width: 580, height: 96 },
+    ...floatingBlocks
   ],
   movingPlatforms: [
     {

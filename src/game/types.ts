@@ -14,7 +14,7 @@ export interface RectDef extends Point {
 }
 
 export interface TerrainDef extends RectDef {
-  kind: 'grass' | 'stone' | 'cloud';
+  kind: 'grass' | 'stone' | 'cloud' | 'skyBrick' | 'runeBox';
 }
 
 export interface MovingPlatformDef extends RectDef {
