@@ -2,11 +2,24 @@ import Phaser from 'phaser';
 import type { PlayerInput } from '../types';
 import { TouchControls } from './TouchControls';
 
-type KeyName = 'left' | 'right' | 'a' | 'd' | 'space' | 'w' | 'up' | 'shift' | 'p' | 'esc' | 'r';
+type KeyName =
+  | 'left'
+  | 'right'
+  | 'down'
+  | 'a'
+  | 'd'
+  | 'space'
+  | 'w'
+  | 'up'
+  | 'shift'
+  | 'p'
+  | 'esc'
+  | 'r';
 
 const emptyInput: PlayerInput = {
   left: false,
   right: false,
+  down: false,
   jumpDown: false,
   jumpPressed: false,
   jumpReleased: false,
@@ -25,6 +38,7 @@ export class InputSystem {
     if (keyboard) {
       this.keys.left = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
       this.keys.right = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
+      this.keys.down = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
       this.keys.a = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
       this.keys.d = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
       this.keys.space = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -47,6 +61,7 @@ export class InputSystem {
       ...emptyInput,
       left: this.isDown(this.keys.left, this.keys.a) || this.touch.getLeftDown(),
       right: this.isDown(this.keys.right, this.keys.d) || this.touch.getRightDown(),
+      down: this.isDown(this.keys.down),
       jumpDown: this.isDown(...jumpKeys) || this.touch.getJumpDown(),
       jumpPressed: this.justDown(...jumpKeys) || this.touch.consumeJumpPressed(),
       jumpReleased: this.justUp(...jumpKeys) || this.touch.consumeJumpReleased(),

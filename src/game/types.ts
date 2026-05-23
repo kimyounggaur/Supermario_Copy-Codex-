@@ -75,6 +75,7 @@ export interface LevelData {
 export interface PlayerInput {
   left: boolean;
   right: boolean;
+  down: boolean;
   jumpDown: boolean;
   jumpPressed: boolean;
   jumpReleased: boolean;

@@ -10,6 +10,7 @@ import {
 const input = (overrides: Partial<PlayerInput> = {}): PlayerInput => ({
   left: false,
   right: false,
+  down: false,
   jumpDown: false,
   jumpPressed: false,
   jumpReleased: false,

@@ -4,7 +4,7 @@ import type { PlayerInput, Point } from '../types';
 import { approach } from '../utils/math';
 import { getArcadeBody } from '../utils/assertions';
 
-type PlayerVisualState = 'idle' | 'run' | 'jump' | 'fall' | 'hurt' | 'wall';
+type PlayerVisualState = 'idle' | 'run' | 'jump' | 'fall' | 'hurt' | 'wall' | 'crouch';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   health: number = PLAYER.maxHealth;
@@ -20,6 +20,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private wallDirection: -1 | 0 | 1 = 0;
   private wallClinging = false;
   private grown = false;
+  private crouching = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'sprout-idle');
@@ -53,6 +54,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.jumpBufferedUntil = time + PLAYER.jumpBufferMs;
     }
 
+    this.setCrouching(input.down && onGround);
     this.updateWallState(input, onGround, body);
     this.applyHorizontalMovement(input, dt, onGround, body);
     this.applyJumping(input, time, onGround, body);
@@ -140,9 +142,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const body = getArcadeBody(this);
     const bottom = body.bottom;
     this.setScale(1, 2);
-    body.setSize(22, 34, false);
-    body.setOffset(5, 8);
-    body.updateFromGameObject();
+    this.syncBodyForPosture(body);
     this.y -= Math.max(0, body.bottom - bottom);
     body.updateFromGameObject();
     return true;
@@ -150,10 +150,26 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   private resetGrowth(): void {
     this.grown = false;
+    this.crouching = false;
     this.setScale(1, 1);
-    const body = getArcadeBody(this);
-    body.setSize(22, 34, false);
-    body.setOffset(5, 8);
+    this.syncBodyForPosture(getArcadeBody(this));
+  }
+
+  private setCrouching(crouching: boolean): void {
+    if (this.crouching === crouching) {
+      return;
+    }
+
+    this.crouching = crouching;
+    this.syncBodyForPosture(getArcadeBody(this));
+  }
+
+  private syncBodyForPosture(body: Phaser.Physics.Arcade.Body): void {
+    const bottom = body.bottom;
+    body.setSize(this.crouching ? 24 : 22, this.crouching ? 20 : 34, false);
+    body.setOffset(this.crouching ? 4 : 5, this.crouching ? 22 : 8);
+    body.updateFromGameObject();
+    this.y -= Math.max(0, body.bottom - bottom);
     body.updateFromGameObject();
   }
 
@@ -259,6 +275,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       ? 'hurt'
       : this.wallClinging
         ? 'wall'
+        : this.crouching && onGround
+          ? 'crouch'
         : !onGround && body.velocity.y < -20
         ? 'jump'
         : !onGround && body.velocity.y > 30

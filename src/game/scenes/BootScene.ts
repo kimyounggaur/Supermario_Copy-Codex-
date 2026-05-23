@@ -19,6 +19,7 @@ export class BootScene extends Phaser.Scene {
     this.drawSprout(graphics, 'sprout-fall', 0x47b969, 3);
     this.drawSprout(graphics, 'sprout-hurt', 0x98d789, 0, true);
     this.drawSprout(graphics, 'sprout-wall', 0x4fcf76, -5);
+    this.drawCrouchSprout(graphics);
 
     this.drawTerrain(graphics, 'terrain-grass', 0x66bd63, 0x7d6b4d, 0xf4fff4);
     this.drawTerrain(graphics, 'terrain-stone', 0xa7b8bd, 0x718389, 0xe6f3f5);
@@ -79,6 +80,34 @@ export class BootScene extends Phaser.Scene {
     graphics.fillRoundedRect(7 + lean, 36, 7, 7, 3);
     graphics.fillRoundedRect(19 + lean, 36, 7, 7, 3);
     graphics.generateTexture(key, 32, 44);
+  }
+
+  private drawCrouchSprout(graphics: Phaser.GameObjects.Graphics): void {
+    if (this.textures.exists('sprout-crouch')) {
+      return;
+    }
+
+    graphics.clear();
+    graphics.fillStyle(0x1d6b3a, 1);
+    graphics.fillEllipse(16, 31, 26, 20);
+    graphics.fillStyle(0x4fc36e, 1);
+    graphics.fillEllipse(16, 29, 24, 18);
+    graphics.lineStyle(3, 0x2d9656, 1);
+    graphics.lineBetween(16, 23, 16, 13);
+    graphics.fillStyle(0x65d37e, 1);
+    graphics.fillTriangle(16, 15, 5, 13, 9, 24);
+    graphics.fillStyle(0x45b963, 1);
+    graphics.fillTriangle(16, 15, 28, 12, 23, 24);
+    graphics.fillStyle(0x123b2b, 1);
+    graphics.fillCircle(11, 28, 2);
+    graphics.fillCircle(21, 28, 2);
+    graphics.lineStyle(2, 0x123b2b, 1);
+    graphics.lineBetween(12, 35, 16, 37);
+    graphics.lineBetween(16, 37, 21, 34);
+    graphics.fillStyle(0x2f8f4f, 1);
+    graphics.fillRoundedRect(7, 39, 7, 5, 3);
+    graphics.fillRoundedRect(19, 39, 7, 5, 3);
+    graphics.generateTexture('sprout-crouch', 32, 44);
   }
 
   private drawTerrain(
