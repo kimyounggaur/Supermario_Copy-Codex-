@@ -21,12 +21,12 @@ function floatingBlockCluster(
 }
 
 const floatingBlocks: TerrainDef[] = [
-  ...floatingBlockCluster('tutorial-floating-block', 930, 430, [
+  ...floatingBlockCluster('tutorial-floating-block', 930, 390, [
     'skyBrick',
     'runeBox',
     'skyBrick'
   ]),
-  ...floatingBlockCluster('seed-floating-block', 1695, 365, [
+  ...floatingBlockCluster('seed-floating-block', 1695, 315, [
     'skyBrick',
     'skyBrick',
     'runeBox',
@@ -39,12 +39,12 @@ const floatingBlocks: TerrainDef[] = [
     'runeBox',
     'skyBrick'
   ]),
-  ...floatingBlockCluster('checkpoint-floating-block', 3815, 420, [
+  ...floatingBlockCluster('checkpoint-floating-block', 3815, 390, [
     'skyBrick',
     'runeBox',
     'skyBrick'
   ]),
-  ...floatingBlockCluster('final-floating-block', 4560, 385, [
+  ...floatingBlockCluster('final-floating-block', 4560, 375, [
     'skyBrick',
     'skyBrick',
     'runeBox',

@@ -29,6 +29,35 @@ describe('level validation', () => {
     ).toBe(true);
   });
 
+  it('keeps enough headroom below floating block clusters for jumping', () => {
+    const floatingBlocks = level1.terrain.filter(
+      (terrain) => terrain.kind === 'skyBrick' || terrain.kind === 'runeBox'
+    );
+    const standingSurfaces = level1.terrain.filter(
+      (terrain) => terrain.kind !== 'skyBrick' && terrain.kind !== 'runeBox'
+    );
+    const minJumpHeadroom = 84;
+
+    const tightSpots = floatingBlocks.flatMap((block) =>
+      standingSurfaces
+        .filter((surface) => {
+          const horizontalOverlap =
+            Math.min(block.x + block.width / 2, surface.x + surface.width / 2) -
+            Math.max(block.x - block.width / 2, surface.x - surface.width / 2);
+
+          return horizontalOverlap > 0 && surface.y > block.y;
+        })
+        .map((surface) => ({
+          block: block.id,
+          surface: surface.id,
+          headroom: surface.y - surface.height / 2 - (block.y + block.height / 2)
+        }))
+        .filter(({ headroom }) => headroom < minJumpHeadroom)
+    );
+
+    expect(tightSpots).toEqual([]);
+  });
+
   it('detects duplicate entity ids', () => {
     const duplicated: LevelData = {
       ...level1,
