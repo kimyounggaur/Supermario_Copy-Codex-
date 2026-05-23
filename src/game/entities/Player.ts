@@ -19,6 +19,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private airJumpsRemaining = PLAYER.maxAirJumps;
   private wallDirection: -1 | 0 | 1 = 0;
   private wallClinging = false;
+  private grown = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'sprout-idle');
@@ -127,6 +128,30 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.invulnerableUntil = 0;
     this.breezeUntil = 0;
     this.airJumpsRemaining = PLAYER.maxAirJumps;
+    this.resetGrowth();
+  }
+
+  grow(): boolean {
+    if (this.grown) {
+      return false;
+    }
+
+    this.grown = true;
+    const body = getArcadeBody(this);
+    const bottom = body.bottom;
+    this.setScale(1, 2);
+    body.setSize(22, 68, false);
+    body.setOffset(5, -24);
+    this.y -= Math.max(0, body.bottom - bottom);
+    return true;
+  }
+
+  private resetGrowth(): void {
+    this.grown = false;
+    this.setScale(1, 1);
+    const body = getArcadeBody(this);
+    body.setSize(22, 34, false);
+    body.setOffset(5, 8);
   }
 
   private applyHorizontalMovement(

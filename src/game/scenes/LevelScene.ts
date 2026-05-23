@@ -5,6 +5,7 @@ import { BaseEnemy } from '../entities/BaseEnemy';
 import { Checkpoint } from '../entities/Checkpoint';
 import { Collectible } from '../entities/Collectible';
 import { FinishGate } from '../entities/FinishGate';
+import { GrowthBud } from '../entities/GrowthBud';
 import { Hazard } from '../entities/Hazard';
 import { MovingPlatform } from '../entities/MovingPlatform';
 import { PowerUp } from '../entities/PowerUp';
@@ -31,6 +32,7 @@ export class LevelScene extends Phaser.Scene {
   private cameraSystem!: CameraSystem;
   private particles!: ParticleSystem;
   private scoreSystem!: ScoreSystem;
+  private growthBuds!: Phaser.Physics.Arcade.Group;
   private audio!: AudioManager;
   private startedAt = 0;
   private lastHudAt = 0;
@@ -56,6 +58,7 @@ export class LevelScene extends Phaser.Scene {
     this.particles = new ParticleSystem(this);
     this.inputSystem = new InputSystem(this);
     this.objects = new LevelLoader(this).load(this.level);
+    this.growthBuds = this.physics.add.group({ allowGravity: true, immovable: false });
     this.player = new Player(this, this.level.start.x, this.level.start.y);
     this.player.resetForNewRun();
 
@@ -97,6 +100,7 @@ export class LevelScene extends Phaser.Scene {
     }
 
     this.updateMovingPlatforms();
+    this.updateGrowthBuds();
     this.updateEnemies(time, delta);
     this.player.updateFromInput(input, time, delta);
     this.cameraSystem.update(this.player);
@@ -128,8 +132,16 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private setupPhysics(): void {
-    this.physics.add.collider(this.player, this.objects.terrain);
+    this.physics.add.collider(
+      this.player,
+      this.objects.terrain,
+      this.handleTerrainCollision,
+      undefined,
+      this
+    );
     this.physics.add.collider(this.player, this.objects.movingPlatforms);
+    this.physics.add.collider(this.growthBuds, this.objects.terrain);
+    this.physics.add.collider(this.growthBuds, this.objects.movingPlatforms);
     this.physics.add.collider(this.objects.enemies, this.objects.terrain);
     this.physics.add.collider(this.objects.enemies, this.objects.movingPlatforms);
 
@@ -144,6 +156,13 @@ export class LevelScene extends Phaser.Scene {
       this.player,
       this.objects.powerUps,
       this.handlePowerUp,
+      undefined,
+      this
+    );
+    this.physics.add.overlap(
+      this.player,
+      this.growthBuds,
+      this.handleGrowthBud,
       undefined,
       this
     );
@@ -204,6 +223,14 @@ export class LevelScene extends Phaser.Scene {
     }
   }
 
+  private updateGrowthBuds(): void {
+    for (const child of this.growthBuds.getChildren()) {
+      if (child instanceof GrowthBud) {
+        child.updateBud();
+      }
+    }
+  }
+
   private updateEnemies(time: number, delta: number): void {
     for (const child of this.objects.enemies.getChildren()) {
       if (child instanceof BaseEnemy && child.active) {
@@ -224,6 +251,54 @@ export class LevelScene extends Phaser.Scene {
     this.emitHud(true);
   }
 
+  private handleTerrainCollision(_playerObject: ArcadeObject, terrainObject: ArcadeObject): void {
+    if (!(terrainObject instanceof Phaser.GameObjects.Image)) {
+      return;
+    }
+
+    if (terrainObject.getData('terrainKind') !== 'runeBox' || terrainObject.getData('spent')) {
+      return;
+    }
+
+    const playerBody = getArcadeBody(this.player);
+    const blockBody = terrainObject.body;
+    const hitFromBelow =
+      blockBody instanceof Phaser.Physics.Arcade.StaticBody &&
+      this.player.y > terrainObject.y &&
+      playerBody.top >= blockBody.bottom - 16 &&
+      (playerBody.blocked.up || playerBody.touching.up || Math.abs(playerBody.velocity.y) < 8);
+
+    if (!hitFromBelow) {
+      return;
+    }
+
+    terrainObject.setData('spent', true);
+    terrainObject.setTexture('terrain-rune-box-used');
+    this.audio.play('power');
+    this.tweens.add({
+      targets: terrainObject,
+      y: terrainObject.y - 8,
+      duration: 70,
+      yoyo: true,
+      ease: 'Sine.easeOut',
+      onUpdate: () => this.updateStaticBlockBody(terrainObject),
+      onComplete: () => this.updateStaticBlockBody(terrainObject)
+    });
+    this.spawnGrowthBud(terrainObject.x, terrainObject.y - 6);
+  }
+
+  private updateStaticBlockBody(block: Phaser.GameObjects.Image): void {
+    if (block.body instanceof Phaser.Physics.Arcade.StaticBody) {
+      block.body.updateFromGameObject();
+    }
+  }
+
+  private spawnGrowthBud(x: number, y: number): void {
+    const bud = new GrowthBud(this, x, y);
+    this.growthBuds.add(bud);
+    this.particles.collectSpark(x, y - 24);
+  }
+
   private handlePowerUp(_playerObject: ArcadeObject, powerObject: ArcadeObject): void {
     if (!(powerObject instanceof PowerUp) || !powerObject.active) {
       return;
@@ -234,6 +309,19 @@ export class LevelScene extends Phaser.Scene {
     this.scoreSystem.addPowerUp();
     this.audio.play('power');
     this.particles.collectSpark(powerObject.x, powerObject.y);
+    this.emitHud(true);
+  }
+
+  private handleGrowthBud(_playerObject: ArcadeObject, budObject: ArcadeObject): void {
+    if (!(budObject instanceof GrowthBud) || !budObject.active) {
+      return;
+    }
+
+    budObject.collect();
+    this.player.grow();
+    this.scoreSystem.addPowerUp();
+    this.audio.play('power');
+    this.particles.collectSpark(this.player.x, this.player.y - 24);
     this.emitHud(true);
   }
 

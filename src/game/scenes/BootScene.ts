@@ -28,6 +28,7 @@ export class BootScene extends Phaser.Scene {
     this.drawMovingPlatform(graphics);
     this.drawSeed(graphics);
     this.drawOrb(graphics);
+    this.drawGrowthBud(graphics);
     this.drawDriftBug(graphics);
     this.drawPuffHopper(graphics);
     this.drawWindWisp(graphics);
@@ -143,34 +144,50 @@ export class BootScene extends Phaser.Scene {
   }
 
   private drawRuneBox(graphics: Phaser.GameObjects.Graphics): void {
-    if (this.textures.exists('terrain-rune-box')) {
+    if (this.textures.exists('terrain-rune-box') && this.textures.exists('terrain-rune-box-used')) {
       return;
     }
 
-    graphics.clear();
-    graphics.fillStyle(0x9a6b00, 1);
-    graphics.fillRoundedRect(0, 0, 44, 44, 5);
-    graphics.fillStyle(0xf2bc2e, 1);
-    graphics.fillRoundedRect(3, 3, 38, 38, 5);
-    graphics.fillStyle(0xffdf61, 1);
-    graphics.fillRoundedRect(6, 5, 30, 28, 4);
-    graphics.fillStyle(0xfff1a8, 0.75);
-    graphics.fillEllipse(15, 9, 20, 5);
-    graphics.lineStyle(2, 0x8a6100, 0.85);
-    graphics.strokeRoundedRect(3, 3, 38, 38, 5);
-    graphics.lineStyle(3, 0xffffff, 0.85);
-    graphics.lineBetween(22, 11, 29, 18);
-    graphics.lineBetween(29, 18, 22, 25);
-    graphics.lineBetween(22, 25, 15, 18);
-    graphics.lineBetween(15, 18, 22, 11);
-    graphics.fillStyle(0xffffff, 0.95);
-    graphics.fillCircle(22, 33, 3);
-    graphics.fillStyle(0x725100, 0.9);
-    graphics.fillCircle(8, 8, 3);
-    graphics.fillCircle(36, 8, 3);
-    graphics.fillCircle(8, 36, 3);
-    graphics.fillCircle(36, 36, 3);
-    graphics.generateTexture('terrain-rune-box', 44, 44);
+    if (!this.textures.exists('terrain-rune-box')) {
+      graphics.clear();
+      graphics.fillStyle(0x9a6b00, 1);
+      graphics.fillRoundedRect(0, 0, 44, 44, 5);
+      graphics.fillStyle(0xf2bc2e, 1);
+      graphics.fillRoundedRect(3, 3, 38, 38, 5);
+      graphics.fillStyle(0xffdf61, 1);
+      graphics.fillRoundedRect(6, 5, 30, 28, 4);
+      graphics.fillStyle(0xfff1a8, 0.75);
+      graphics.fillEllipse(15, 9, 20, 5);
+      graphics.lineStyle(2, 0x8a6100, 0.85);
+      graphics.strokeRoundedRect(3, 3, 38, 38, 5);
+      graphics.lineStyle(3, 0xffffff, 0.85);
+      graphics.lineBetween(22, 11, 29, 18);
+      graphics.lineBetween(29, 18, 22, 25);
+      graphics.lineBetween(22, 25, 15, 18);
+      graphics.lineBetween(15, 18, 22, 11);
+      graphics.fillStyle(0xffffff, 0.95);
+      graphics.fillCircle(22, 33, 3);
+      graphics.fillStyle(0x725100, 0.9);
+      graphics.fillCircle(8, 8, 3);
+      graphics.fillCircle(36, 8, 3);
+      graphics.fillCircle(8, 36, 3);
+      graphics.fillCircle(36, 36, 3);
+      graphics.generateTexture('terrain-rune-box', 44, 44);
+    }
+
+    if (!this.textures.exists('terrain-rune-box-used')) {
+      graphics.clear();
+      graphics.fillStyle(0x5a6970, 1);
+      graphics.fillRoundedRect(0, 0, 44, 44, 5);
+      graphics.fillStyle(0x899ca5, 1);
+      graphics.fillRoundedRect(3, 3, 38, 38, 5);
+      graphics.lineStyle(3, 0x53666e, 1);
+      graphics.lineBetween(10, 22, 34, 22);
+      graphics.lineBetween(22, 10, 22, 34);
+      graphics.lineStyle(2, 0xcfe7f0, 0.5);
+      graphics.strokeRoundedRect(3, 3, 38, 38, 5);
+      graphics.generateTexture('terrain-rune-box-used', 44, 44);
+    }
   }
 
   private drawSeed(graphics: Phaser.GameObjects.Graphics): void {
@@ -219,6 +236,30 @@ export class BootScene extends Phaser.Scene {
     graphics.lineBetween(13, 13, 20, 13);
     graphics.lineBetween(20, 13, 25, 15);
     graphics.generateTexture('breeze-orb', 32, 32);
+  }
+
+  private drawGrowthBud(graphics: Phaser.GameObjects.Graphics): void {
+    if (this.textures.exists('growth-bud')) {
+      return;
+    }
+
+    graphics.clear();
+    graphics.fillStyle(0xf5e7ad, 1);
+    graphics.fillEllipse(16, 24, 24, 16);
+    graphics.fillStyle(0x2e4d38, 1);
+    graphics.fillEllipse(11, 24, 3, 10);
+    graphics.fillEllipse(21, 24, 3, 10);
+    graphics.fillStyle(0x62c975, 1);
+    graphics.fillEllipse(16, 11, 28, 22);
+    graphics.fillStyle(0xb9f3a7, 1);
+    graphics.fillCircle(16, 8, 7);
+    graphics.fillCircle(7, 13, 5);
+    graphics.fillCircle(25, 13, 5);
+    graphics.lineStyle(2, 0x2b8c55, 1);
+    graphics.strokeEllipse(16, 11, 28, 22);
+    graphics.fillStyle(0xffffff, 0.45);
+    graphics.fillEllipse(10, 5, 10, 3);
+    graphics.generateTexture('growth-bud', 32, 32);
   }
 
   private drawDriftBug(graphics: Phaser.GameObjects.Graphics): void {

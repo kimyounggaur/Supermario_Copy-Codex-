@@ -33,6 +33,8 @@ export class LevelLoader {
         .setDepth(DEPTHS.terrain)
         .setDisplaySize(rect.width, rect.height);
       tile.setName(rect.id);
+      tile.setData('terrainKind', rect.kind);
+      tile.setData('spent', false);
       terrain.add(tile);
       getStaticBody(tile).setSize(rect.width, rect.height).updateFromGameObject();
     }
