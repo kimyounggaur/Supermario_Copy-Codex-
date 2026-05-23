@@ -103,7 +103,7 @@ export class LevelScene extends Phaser.Scene {
     this.updateMovingPlatforms();
     this.updateGrowthBuds();
     this.updateEnemies(time, delta);
-    this.player.updateFromInput(input, time, delta);
+    this.player.updateFromInput(this.resolveCrouchInput(input), time, delta);
     this.cameraSystem.update(this.player);
     this.checkFall(time);
     this.detectLanding();
@@ -243,6 +243,18 @@ export class LevelScene extends Phaser.Scene {
         child.updateEnemy(time, delta);
       }
     }
+  }
+
+  private resolveCrouchInput(input: ReturnType<InputSystem['read']>): ReturnType<InputSystem['read']> {
+    if (
+      input.down ||
+      !this.player.isCrouching() ||
+      this.player.hasRoomToStand([this.objects.terrain, this.objects.movingPlatforms])
+    ) {
+      return input;
+    }
+
+    return { ...input, down: true };
   }
 
   private handleCollectible(_playerObject: ArcadeObject, collectibleObject: ArcadeObject): void {

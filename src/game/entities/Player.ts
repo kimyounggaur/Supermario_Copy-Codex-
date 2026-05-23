@@ -3,8 +3,10 @@ import { DEPTHS, PLAYER } from '../config/constants';
 import type { PlayerInput, Point } from '../types';
 import { approach } from '../utils/math';
 import { getArcadeBody } from '../utils/assertions';
+import { hasStandingRoom, type Bounds } from '../systems/standingRoom';
 
 type PlayerVisualState = 'idle' | 'run' | 'jump' | 'fall' | 'hurt' | 'wall' | 'crouch';
+type ObstacleGroup = Phaser.Physics.Arcade.Group | Phaser.Physics.Arcade.StaticGroup;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   health: number = PLAYER.maxHealth;
@@ -121,6 +123,24 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     return time < this.breezeUntil;
   }
 
+  isCrouching(): boolean {
+    return this.crouching;
+  }
+
+  hasRoomToStand(obstacleGroups: ObstacleGroup[]): boolean {
+    const body = getArcadeBody(this);
+    const standingBounds = this.getStandingBounds(body);
+    const overheadObstacles = obstacleGroups.flatMap((group) =>
+      group
+        .getChildren()
+        .map((child) => this.getObstacleBounds(child))
+        .filter((bounds): bounds is Bounds => Boolean(bounds))
+        .filter((bounds) => bounds.top < body.bottom - 2)
+    );
+
+    return hasStandingRoom(standingBounds, overheadObstacles);
+  }
+
   isInvulnerable(time: number): boolean {
     return time < this.invulnerableUntil;
   }
@@ -171,6 +191,41 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     body.updateFromGameObject();
     this.y -= Math.max(0, body.bottom - bottom);
     body.updateFromGameObject();
+  }
+
+  private getStandingBounds(body: Phaser.Physics.Arcade.Body): Bounds {
+    const width = 22 * this.scaleX;
+    const height = 34 * this.scaleY;
+    const centerX = body.center.x;
+
+    return {
+      left: centerX - width / 2,
+      right: centerX + width / 2,
+      top: body.bottom - height,
+      bottom: body.bottom
+    };
+  }
+
+  private getObstacleBounds(child: Phaser.GameObjects.GameObject): Bounds | null {
+    if (!child.active) {
+      return null;
+    }
+
+    const body = (child as Phaser.GameObjects.GameObject & { body?: unknown }).body;
+
+    if (
+      body instanceof Phaser.Physics.Arcade.Body ||
+      body instanceof Phaser.Physics.Arcade.StaticBody
+    ) {
+      return {
+        left: body.left,
+        right: body.right,
+        top: body.top,
+        bottom: body.bottom
+      };
+    }
+
+    return null;
   }
 
   private applyHorizontalMovement(
