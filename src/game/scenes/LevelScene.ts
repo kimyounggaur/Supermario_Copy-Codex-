@@ -197,10 +197,15 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private setupPlayerEvents(): void {
-    this.events.on('player:jump', (x: number, y: number) => {
-      this.audio.play('jump');
-      this.particles.jumpDust(x, y);
+    this.events.on('player:jump', this.handlePlayerJump, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.events.off('player:jump', this.handlePlayerJump, this);
     });
+  }
+
+  private handlePlayerJump(x: number, y: number): void {
+    this.audio.play('jump');
+    this.particles.jumpDust(x, y);
   }
 
   private handlePointerPause(pointer: Phaser.Input.Pointer): void {

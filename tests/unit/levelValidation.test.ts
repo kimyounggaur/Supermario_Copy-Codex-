@@ -14,6 +14,21 @@ describe('level validation', () => {
     expect(level1.terrain.length).toBeGreaterThan(0);
   });
 
+  it('includes interactive rune boxes embedded between sky bricks', () => {
+    const runeBoxes = level1.terrain.filter((terrain) => terrain.kind === 'runeBox');
+    const skyBricks = level1.terrain.filter((terrain) => terrain.kind === 'skyBrick');
+
+    expect(runeBoxes.length).toBeGreaterThanOrEqual(5);
+    expect(skyBricks.length).toBeGreaterThan(runeBoxes.length);
+    expect(
+      runeBoxes.every((runeBox) =>
+        skyBricks.some(
+          (skyBrick) => skyBrick.y === runeBox.y && Math.abs(skyBrick.x - runeBox.x) === 44
+        )
+      )
+    ).toBe(true);
+  });
+
   it('detects duplicate entity ids', () => {
     const duplicated: LevelData = {
       ...level1,
