@@ -10,6 +10,9 @@ export interface PlayerPhysicsState {
   onGround: boolean;
   lastGroundedAt: number;
   jumpBufferedUntil: number;
+  airJumpsRemaining: number;
+  onWall: boolean;
+  wallDirection: -1 | 0 | 1;
   health: number;
   invulnerableUntil: number;
 }
@@ -23,6 +26,9 @@ export function createPlayerPhysicsState(): PlayerPhysicsState {
     onGround: true,
     lastGroundedAt: 0,
     jumpBufferedUntil: Number.NEGATIVE_INFINITY,
+    airJumpsRemaining: PLAYER.maxAirJumps,
+    onWall: false,
+    wallDirection: 0,
     health: PLAYER.maxHealth,
     invulnerableUntil: 0
   };
@@ -39,6 +45,7 @@ export function stepPlayerPhysics(
 
   if (next.onGround) {
     next.lastGroundedAt = nowMs;
+    next.airJumpsRemaining = PLAYER.maxAirJumps;
   }
 
   if (input.jumpPressed) {
@@ -60,14 +67,41 @@ export function stepPlayerPhysics(
 
   const hasBufferedJump = nowMs <= next.jumpBufferedUntil;
   const canJump = next.onGround || nowMs - next.lastGroundedAt <= PLAYER.coyoteMs;
+  const wallClinging =
+    !next.onGround &&
+    next.onWall &&
+    next.wallDirection !== 0 &&
+    ((next.wallDirection < 0 && input.left) || (next.wallDirection > 0 && input.right)) &&
+    next.vy >= -40;
 
-  if (hasBufferedJump && canJump) {
-    next.vy = PLAYER.jumpVelocity;
-    next.onGround = false;
+  if (wallClinging) {
+    next.airJumpsRemaining = PLAYER.maxAirJumps;
+  }
+
+  if (hasBufferedJump && wallClinging) {
+    next.vx = -next.wallDirection * PLAYER.wallJumpVelocityX;
+    next.vy = PLAYER.wallJumpVelocityY;
+    next.airJumpsRemaining = PLAYER.maxAirJumps;
     next.jumpBufferedUntil = Number.NEGATIVE_INFINITY;
     next.lastGroundedAt = Number.NEGATIVE_INFINITY;
+    next.onWall = false;
+    next.wallDirection = 0;
+  } else if (hasBufferedJump && canJump) {
+    next.vy = PLAYER.jumpVelocity;
+    next.onGround = false;
+    next.airJumpsRemaining = PLAYER.maxAirJumps;
+    next.jumpBufferedUntil = Number.NEGATIVE_INFINITY;
+    next.lastGroundedAt = Number.NEGATIVE_INFINITY;
+  } else if (hasBufferedJump && next.airJumpsRemaining > 0) {
+    next.vy = PLAYER.doubleJumpVelocity;
+    next.airJumpsRemaining -= 1;
+    next.jumpBufferedUntil = Number.NEGATIVE_INFINITY;
   } else if (!next.onGround) {
     next.vy = Math.min(next.vy + 1050 * dt, PLAYER.maxFallSpeed);
+  }
+
+  if (wallClinging) {
+    next.vy = Math.min(next.vy, PLAYER.wallSlideMaxFallSpeed);
   }
 
   if (input.jumpReleased && next.vy < PLAYER.shortJumpVelocity) {

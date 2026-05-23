@@ -18,6 +18,7 @@ export class BootScene extends Phaser.Scene {
     this.drawSprout(graphics, 'sprout-jump', 0x66d67f, -2);
     this.drawSprout(graphics, 'sprout-fall', 0x47b969, 3);
     this.drawSprout(graphics, 'sprout-hurt', 0x98d789, 0, true);
+    this.drawSprout(graphics, 'sprout-wall', 0x4fcf76, -5);
 
     this.drawTerrain(graphics, 'terrain-grass', 0x66bd63, 0x7d6b4d, 0xf4fff4);
     this.drawTerrain(graphics, 'terrain-stone', 0xa7b8bd, 0x718389, 0xe6f3f5);

@@ -4,7 +4,7 @@ import type { PlayerInput, Point } from '../types';
 import { approach } from '../utils/math';
 import { getArcadeBody } from '../utils/assertions';
 
-type PlayerVisualState = 'idle' | 'run' | 'jump' | 'fall' | 'hurt';
+type PlayerVisualState = 'idle' | 'run' | 'jump' | 'fall' | 'hurt' | 'wall';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   health: number = PLAYER.maxHealth;
@@ -16,6 +16,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private invulnerableUntil = 0;
   private breezeUntil = 0;
   private visualState: PlayerVisualState = 'idle';
+  private airJumpsRemaining = PLAYER.maxAirJumps;
+  private wallDirection: -1 | 0 | 1 = 0;
+  private wallClinging = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'sprout-idle');
@@ -42,14 +45,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     if (onGround) {
       this.lastGroundedAt = time;
+      this.airJumpsRemaining = PLAYER.maxAirJumps;
     }
 
     if (input.jumpPressed) {
       this.jumpBufferedUntil = time + PLAYER.jumpBufferMs;
     }
 
+    this.updateWallState(input, onGround, body);
     this.applyHorizontalMovement(input, dt, onGround, body);
     this.applyJumping(input, time, onGround, body);
+    this.applyWallSlide(body);
 
     body.setGravityY(body.velocity.y > 20 ? PLAYER.extraFallGravity : 0);
     body.velocity.y = Math.min(body.velocity.y, PLAYER.maxFallSpeed);
@@ -120,6 +126,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.health = PLAYER.maxHealth;
     this.invulnerableUntil = 0;
     this.breezeUntil = 0;
+    this.airJumpsRemaining = PLAYER.maxAirJumps;
   }
 
   private applyHorizontalMovement(
@@ -161,17 +168,58 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const canUseCoyote = time - this.lastGroundedAt <= PLAYER.coyoteMs;
     const hasBufferedJump = time <= this.jumpBufferedUntil;
 
-    if (hasBufferedJump && (onGround || canUseCoyote)) {
-      const jumpVelocity = this.hasBreeze(time) ? PLAYER.poweredJumpVelocity : PLAYER.jumpVelocity;
-      body.setVelocityY(jumpVelocity);
+    if (hasBufferedJump && this.wallClinging) {
+      body.setVelocity(-this.wallDirection * PLAYER.wallJumpVelocityX, PLAYER.wallJumpVelocityY);
+      this.facing = this.wallDirection < 0 ? 1 : -1;
+      this.airJumpsRemaining = PLAYER.maxAirJumps;
       this.jumpBufferedUntil = Number.NEGATIVE_INFINITY;
       this.lastGroundedAt = Number.NEGATIVE_INFINITY;
+      this.wallClinging = false;
+      this.scene.events.emit('player:jump', this.x, this.y);
+    } else if (hasBufferedJump && (onGround || canUseCoyote)) {
+      const jumpVelocity = this.hasBreeze(time) ? PLAYER.poweredJumpVelocity : PLAYER.jumpVelocity;
+      body.setVelocityY(jumpVelocity);
+      this.airJumpsRemaining = PLAYER.maxAirJumps;
+      this.jumpBufferedUntil = Number.NEGATIVE_INFINITY;
+      this.lastGroundedAt = Number.NEGATIVE_INFINITY;
+      this.scene.events.emit('player:jump', this.x, this.y);
+    } else if (hasBufferedJump && this.airJumpsRemaining > 0) {
+      body.setVelocityY(
+        this.hasBreeze(time) ? PLAYER.doubleJumpVelocity - 35 : PLAYER.doubleJumpVelocity
+      );
+      this.airJumpsRemaining -= 1;
+      this.jumpBufferedUntil = Number.NEGATIVE_INFINITY;
       this.scene.events.emit('player:jump', this.x, this.y);
     }
 
     if (input.jumpReleased && body.velocity.y < PLAYER.shortJumpVelocity) {
       body.setVelocityY(PLAYER.shortJumpVelocity);
     }
+  }
+
+  private updateWallState(
+    input: PlayerInput,
+    onGround: boolean,
+    body: Phaser.Physics.Arcade.Body
+  ): void {
+    const wallDirection = body.blocked.left || body.touching.left ? -1 : body.blocked.right || body.touching.right ? 1 : 0;
+    const pressingIntoWall =
+      (wallDirection < 0 && input.left) || (wallDirection > 0 && input.right);
+
+    this.wallDirection = wallDirection;
+    this.wallClinging = !onGround && pressingIntoWall && wallDirection !== 0 && body.velocity.y >= -40;
+
+    if (this.wallClinging) {
+      this.airJumpsRemaining = PLAYER.maxAirJumps;
+    }
+  }
+
+  private applyWallSlide(body: Phaser.Physics.Arcade.Body): void {
+    if (!this.wallClinging || body.velocity.y <= PLAYER.wallSlideMaxFallSpeed) {
+      return;
+    }
+
+    body.setVelocityY(PLAYER.wallSlideMaxFallSpeed);
   }
 
   private updateVisualState(
@@ -181,7 +229,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   ): void {
     const nextState: PlayerVisualState = this.isInvulnerable(time)
       ? 'hurt'
-      : !onGround && body.velocity.y < -20
+      : this.wallClinging
+        ? 'wall'
+        : !onGround && body.velocity.y < -20
         ? 'jump'
         : !onGround && body.velocity.y > 30
           ? 'fall'

@@ -39,6 +39,7 @@ describe('player physics model', () => {
       ...createPlayerPhysicsState(),
       onGround: false,
       lastGroundedAt: Number.NEGATIVE_INFINITY,
+      airJumpsRemaining: 0,
       vy: 240
     };
 
@@ -57,6 +58,52 @@ describe('player physics model', () => {
     }
 
     expect(state.vx).toBeLessThanOrEqual(PLAYER.runSpeed);
+  });
+
+  it('allows one double jump while airborne', () => {
+    const state = {
+      ...createPlayerPhysicsState(),
+      onGround: false,
+      lastGroundedAt: Number.NEGATIVE_INFINITY,
+      airJumpsRemaining: 1,
+      vy: 120
+    };
+
+    const jumped = stepPlayerPhysics(state, input({ jumpPressed: true, jumpDown: true }), 16, 500);
+    const denied = stepPlayerPhysics(
+      { ...jumped, vy: 80 },
+      input({ jumpPressed: true, jumpDown: true }),
+      16,
+      700
+    );
+
+    expect(jumped.vy).toBe(PLAYER.doubleJumpVelocity);
+    expect(jumped.airJumpsRemaining).toBe(0);
+    expect(denied.vy).toBeGreaterThan(PLAYER.doubleJumpVelocity);
+  });
+
+  it('slides on a held wall and jumps away from it', () => {
+    const state = {
+      ...createPlayerPhysicsState(),
+      onGround: false,
+      onWall: true,
+      wallDirection: 1 as const,
+      lastGroundedAt: Number.NEGATIVE_INFINITY,
+      vy: 300
+    };
+
+    const sliding = stepPlayerPhysics(state, input({ right: true }), 16, 500);
+    const wallJumped = stepPlayerPhysics(
+      { ...sliding, onWall: true, wallDirection: 1 },
+      input({ right: true, jumpPressed: true, jumpDown: true }),
+      16,
+      532
+    );
+
+    expect(sliding.vy).toBe(PLAYER.wallSlideMaxFallSpeed);
+    expect(wallJumped.vy).toBe(PLAYER.wallJumpVelocityY);
+    expect(wallJumped.vx).toBe(-PLAYER.wallJumpVelocityX);
+    expect(wallJumped.airJumpsRemaining).toBe(PLAYER.maxAirJumps);
   });
 
   it('reduces health once and applies invulnerability after a hit', () => {

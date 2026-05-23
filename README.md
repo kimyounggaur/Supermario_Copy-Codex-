@@ -40,6 +40,8 @@ The E2E smoke test starts the Vite dev server, opens the game in Chromium, click
 - Pause: P, Escape, or the top-right touch button
 - Restart at checkpoint: R
 - Mobile: left/right buttons bottom-left, jump and run buttons bottom-right
+- Wall cling: hold toward a wall while falling to slide slowly, then jump to kick away
+- Double jump: press jump once more while airborne
 
 ## Screen Layout
 
@@ -57,7 +59,7 @@ The first screen is the game menu with the title, Sprout, and a Start button. Du
 
 ## Game Systems
 
-Player movement uses acceleration, separate walk/run speed caps, ground and air drag, coyote time, jump buffering, variable jump height, stronger falling gravity, knockback, and invulnerability after damage. Enemies can be stomped from above or damage the player from the side. Falling below the stage returns Sprout to the latest checkpoint while health remains available.
+Player movement uses acceleration, separate walk/run speed caps, ground and air drag, coyote time, jump buffering, variable jump height, wall cling, wall jump, one double jump, stronger falling gravity, knockback, and invulnerability after damage. Enemies can be stomped from above or damage the player from the side. Falling below the stage returns Sprout to the latest checkpoint while health remains available.
 
 The score system awards points for Light Seed Shards, defeated enemies, Breeze Orb collection, and fast level clears. Best score is stored in `localStorage` under the `sky-sprout-runner.best-score` key.
 
