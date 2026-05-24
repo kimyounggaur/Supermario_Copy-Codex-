@@ -9,6 +9,8 @@ test('opens Sky Forge Editor and shows core panels', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Sky Forge Editor' })).toBeVisible();
   await expect(page.getByRole('toolbar', { name: 'Editor toolbar' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Object palette' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Layer panel' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Difficulty estimator' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Properties panel' })).toBeVisible();
   await expect(page.getByTestId('editor-canvas-host')).toBeVisible();
   await expect(page.getByTestId('editor-canvas-host').locator('canvas')).toBeVisible();

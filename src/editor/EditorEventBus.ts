@@ -6,9 +6,11 @@ export interface EditorBusEvents {
   select: { ids: string[]; additive: boolean };
   move: { ids: string[]; delta: { x: number; y: number } };
   delete: { ids: string[] };
+  'path:addWaypoint': { x: number; y: number };
   cursor: { x: number; y: number };
   camera: { x: number; y: number; zoom: number };
   focus: { x: number; y: number };
+  thumbnail: { dataUrl: string };
 }
 
 export class EditorEventBus {

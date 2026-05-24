@@ -160,11 +160,13 @@ select {
 .editor-workbench {
   min-height: 0;
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr) 280px;
+  grid-template-columns: 240px 180px minmax(0, 1fr) 280px 220px;
 }
 
 .palette-panel,
+.layer-panel,
 .properties-panel,
+.difficulty-panel,
 .validation-panel {
   min-height: 0;
   overflow: auto;
@@ -177,14 +179,58 @@ select {
   border-right: 1px solid rgba(27, 87, 104, 0.18);
 }
 
+.layer-panel,
+.difficulty-panel {
+  border-left: 1px solid rgba(27, 87, 104, 0.12);
+  border-right: 1px solid rgba(27, 87, 104, 0.12);
+}
+
 .properties-panel {
   border-left: 1px solid rgba(27, 87, 104, 0.18);
 }
 
 .properties-panel h2,
+.layer-panel h2,
+.difficulty-panel h2,
 .validation-panel h2 {
   margin: 0 0 10px;
   font-size: 1rem;
+}
+
+.layer-list {
+  display: grid;
+  gap: 6px;
+}
+
+.layer-row {
+  display: grid;
+  grid-template-columns: 42px 1fr 52px;
+  gap: 6px;
+  align-items: center;
+  min-height: 36px;
+  padding: 4px;
+  border: 1px solid rgba(27, 87, 104, 0.16);
+  border-radius: 6px;
+}
+
+.layer-row--active {
+  background: #e9fff4;
+  border-color: rgba(56, 139, 104, 0.42);
+}
+
+.icon-button,
+.layer-name {
+  min-width: 0;
+  min-height: 28px;
+  padding: 4px 6px;
+  font-size: 0.72rem;
+}
+
+.layer-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  white-space: nowrap;
 }
 
 .palette-tabs {
@@ -277,14 +323,54 @@ select {
   position: absolute;
   right: 12px;
   bottom: 12px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
+  width: 190px;
+  height: 86px;
+  display: block;
   padding: 8px 10px;
   border: 1px solid rgba(27, 87, 104, 0.24);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.82);
   font-size: 0.8rem;
+  overflow: hidden;
+  text-align: left;
+}
+
+.mini-map__dot,
+.mini-map__viewport {
+  position: absolute;
+  display: block;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.mini-map__dot {
+  height: 3px;
+  border-radius: 999px;
+  background: #1b5768;
+}
+
+.mini-map__dot--items,
+.mini-map__dot--utilities {
+  background: #e4a600;
+}
+
+.mini-map__dot--enemies,
+.mini-map__dot--hazards {
+  background: #9b4fc1;
+}
+
+.mini-map__viewport {
+  min-width: 14px;
+  min-height: 12px;
+  border: 2px solid #102a2d;
+  transform: none;
+}
+
+.mini-map strong {
+  position: absolute;
+  left: 8px;
+  bottom: 6px;
+  font-size: 0.74rem;
 }
 
 .property-form {
@@ -334,6 +420,70 @@ select {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+}
+
+.property-actions--grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+.multi-inspector,
+.path-editor {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.path-editor h3 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.waypoint-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 1fr auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.waypoint-row input {
+  min-width: 0;
+}
+
+.difficulty-panel dl {
+  display: grid;
+  gap: 7px;
+  margin: 10px 0 0;
+}
+
+.difficulty-panel dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.difficulty-panel dt {
+  color: #31585f;
+}
+
+.difficulty-panel dd {
+  margin: 0;
+  font-weight: 800;
+}
+
+.difficulty-badge {
+  display: inline-block;
+  min-width: 88px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #e9fff4;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.difficulty-badge--hard,
+.difficulty-badge--experimental {
+  background: #ffe7f3;
 }
 
 .editor-statusbar {
@@ -468,6 +618,23 @@ select {
   background: rgba(255, 255, 255, 0.72);
 }
 
+.level-card__thumb {
+  height: 74px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(27, 87, 104, 0.16);
+  border-radius: 6px;
+  background:
+    linear-gradient(90deg, rgba(116, 198, 107, 0.42) 12%, transparent 12% 34%, rgba(188, 239, 255, 0.75) 34% 42%, transparent 42%),
+    linear-gradient(#c9f3ff, #effcf4);
+}
+
+.level-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .level-card h2 {
   margin: 0 0 6px;
   font-size: 1.05rem;
@@ -517,7 +684,9 @@ select {
     border-right: 0;
   }
 
-  .properties-panel {
+  .layer-panel,
+  .properties-panel,
+  .difficulty-panel {
     display: none;
   }
 

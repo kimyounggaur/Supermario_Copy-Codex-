@@ -1,13 +1,15 @@
 import type { LevelData } from '../../game/data/LevelData';
+import type { LevelTemplateId } from '../data/levelTemplates';
 
 interface LevelSettingsDialogProps {
   level: LevelData;
   open: boolean;
   onClose: () => void;
   onChange: (level: LevelData) => void;
+  onTemplate: (templateId: LevelTemplateId) => void;
 }
 
-export function LevelSettingsDialog({ level, open, onClose, onChange }: LevelSettingsDialogProps) {
+export function LevelSettingsDialog({ level, open, onClose, onChange, onTemplate }: LevelSettingsDialogProps) {
   if (!open) {
     return null;
   }
@@ -16,6 +18,25 @@ export function LevelSettingsDialog({ level, open, onClose, onChange }: LevelSet
     <div className="editor-modal" role="dialog" aria-modal="true" aria-label="Level settings">
       <form className="editor-modal__body" onSubmit={(event) => event.preventDefault()}>
         <h2>Level Settings</h2>
+        <label>
+          Template
+          <select
+            defaultValue=""
+            onChange={(event) => {
+              if (event.target.value) {
+                onTemplate(event.target.value as LevelTemplateId);
+                event.target.value = '';
+              }
+            }}
+          >
+            <option value="">Choose template</option>
+            <option value="emptyIsland">Empty Island</option>
+            <option value="starterPlains">Starter Plains</option>
+            <option value="floatingChallenge">Floating Challenge</option>
+            <option value="enemyPractice">Enemy Practice</option>
+            <option value="speedRunStrip">Speed Run Strip</option>
+          </select>
+        </label>
         <label>
           Name
           <input value={level.name} onChange={(event) => onChange({ ...level, name: event.target.value })} />

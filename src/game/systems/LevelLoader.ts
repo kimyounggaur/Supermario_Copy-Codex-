@@ -49,7 +49,9 @@ export class LevelLoader {
           platformDef.height,
           platformDef.from,
           platformDef.to,
-          platformDef.speed
+          platformDef.speed,
+          platformDef.waypoints,
+          platformDef.mode
         )
       );
     }

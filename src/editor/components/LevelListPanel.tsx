@@ -37,9 +37,16 @@ export function LevelListPanel({
         ) : (
           levels.map((level) => (
             <article key={level.id} className="level-card">
+              <div className="level-card__thumb" aria-hidden="true">
+                {level.thumbnail?.startsWith('data:') ? <img src={level.thumbnail} alt="" /> : <span />}
+              </div>
               <h2>{level.name}</h2>
               <p>
                 {level.widthTiles} x {level.heightTiles}
+              </p>
+              <p>
+                Best time {level.bestTimeSeconds ? `${level.bestTimeSeconds}s` : '-'} / Best score{' '}
+                {level.bestScore ?? '-'}
               </p>
               <div className="level-card-actions">
                 <button type="button" aria-label={`Edit ${level.name}`} onClick={() => onEdit(level.id)}>

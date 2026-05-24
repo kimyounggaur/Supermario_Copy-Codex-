@@ -226,6 +226,8 @@ export function toRuntimeLevelData(level: LevelData): RuntimeLevelData {
       height: platform.height,
       from: platform.waypoints[0] ?? { x: platform.x, y: platform.y },
       to: platform.waypoints[1] ?? { x: platform.x + tileSize * 4, y: platform.y },
+      waypoints: platform.waypoints.length >= 2 ? platform.waypoints : undefined,
+      mode: platform.mode,
       speed: platform.speed
     }));
 

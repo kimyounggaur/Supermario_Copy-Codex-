@@ -20,6 +20,8 @@ export interface TerrainDef extends RectDef {
 export interface MovingPlatformDef extends RectDef {
   from: Point;
   to: Point;
+  waypoints?: Point[];
+  mode?: 'loop' | 'pingPong';
   speed: number;
 }
 

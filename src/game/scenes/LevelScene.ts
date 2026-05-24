@@ -541,6 +541,15 @@ export class LevelScene extends Phaser.Scene {
     this.cameras.main.shake(160, 0.002);
     publishGameState('levelComplete');
     this.emitHud(true);
+    window.dispatchEvent(
+      new CustomEvent('sky-sprout:level-complete', {
+        detail: {
+          levelId: this.level.id,
+          score: this.scoreSystem.getScore(),
+          elapsedSeconds
+        }
+      })
+    );
     this.scene.launch('LevelCompleteScene', {
       score: this.scoreSystem.getScore(),
       shards: this.scoreSystem.getShards(),

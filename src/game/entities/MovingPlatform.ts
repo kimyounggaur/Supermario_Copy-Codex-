@@ -5,7 +5,8 @@ import { getArcadeBody } from '../utils/assertions';
 
 export class MovingPlatform extends Phaser.Physics.Arcade.Image {
   private direction = 1;
-  private readonly distance: number;
+  private segmentIndex = 0;
+  private readonly path: Point[];
 
   constructor(
     scene: Phaser.Scene,
@@ -15,7 +16,9 @@ export class MovingPlatform extends Phaser.Physics.Arcade.Image {
     height: number,
     private readonly from: Point,
     private readonly to: Point,
-    private readonly speed: number
+    private readonly speed: number,
+    waypoints: Point[] = [from, to],
+    private readonly mode: 'loop' | 'pingPong' = 'pingPong'
   ) {
     super(scene, x, y, 'moving-platform');
     scene.add.existing(this);
@@ -30,18 +33,18 @@ export class MovingPlatform extends Phaser.Physics.Arcade.Image {
     body.setSize(width, height);
     body.setOffset(0, 0);
 
-    this.distance = Phaser.Math.Distance.Between(from.x, from.y, to.x, to.y);
+    this.path = waypoints.length >= 2 ? waypoints : [from, to];
   }
 
   updatePlatform(): void {
     const body = getArcadeBody(this);
-    const target = this.direction > 0 ? this.to : this.from;
+    const target = this.path[this.segmentIndex] ?? this.to;
     const dx = target.x - this.x;
     const dy = target.y - this.y;
     const remaining = Math.hypot(dx, dy);
 
     if (remaining < 4) {
-      this.direction *= -1;
+      this.advanceTarget();
       body.setVelocity(0, 0);
       return;
     }
@@ -50,8 +53,23 @@ export class MovingPlatform extends Phaser.Physics.Arcade.Image {
     const vy = (dy / Math.max(remaining, 1)) * this.speed;
     body.setVelocity(vx, vy);
 
-    if (this.distance === 0) {
+    if (this.path.length < 2 || Phaser.Math.Distance.Between(this.from.x, this.from.y, this.to.x, this.to.y) === 0) {
       body.setVelocity(0, 0);
     }
+  }
+
+  private advanceTarget(): void {
+    if (this.mode === 'loop') {
+      this.segmentIndex = (this.segmentIndex + 1) % this.path.length;
+      return;
+    }
+
+    if (this.segmentIndex >= this.path.length - 1) {
+      this.direction = -1;
+    } else if (this.segmentIndex <= 0) {
+      this.direction = 1;
+    }
+
+    this.segmentIndex += this.direction;
   }
 }

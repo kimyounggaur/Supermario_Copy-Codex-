@@ -54,7 +54,7 @@ The first screen is the game menu with the title, Sprout, and a Start button. Du
 - `src/game/entities` contains Player, enemies, pickups, hazards, checkpoints, platforms, and the finish gate.
 - `src/game/systems` contains input, touch controls, scoring, saving, audio, camera, collision, particles, and level loading.
 - `src/game/data/levels/level1.ts` is the editable data-driven stage definition.
-- `tests/unit` covers pure player physics, scoring, saving, and level validation.
+- `tests/unit` covers pure player physics, scoring, saving, level validation, editor command stacks, schema migration, advanced editor tools, and local persistence guards.
 - `tests/e2e` contains the Playwright browser smoke test.
 
 ## Game Systems
@@ -72,11 +72,17 @@ Open the app, choose **Create Level**, and use the palette to place original Sky
 ### Sky Forge Editor
 
 - **Palette:** Terrain, Platforms, Items, Enemies, Hazards, Utilities, and Decorations.
+- **Layers:** show, hide, lock, unlock, and set the active layer for Terrain, Platforms, Items, Enemies, Hazards, Utilities, and Decorations.
 - **Placement:** choose an object, then click the Phaser editor canvas.
 - **Selection:** use Select mode, then click an object. Drag selected objects to move them.
-- **Properties:** edit position, size, visibility, lock state, notes, speed, and patrol-style values from the right panel.
+- **Properties:** edit position, size, visibility, lock state, notes, speed, moving-platform paths, and patrol-style values from the right panel.
+- **Path Tool:** select a Moving Breeze Platform, switch to Path mode, and click the canvas to add waypoints. The path preview line shows loop or ping-pong routing, and waypoint coordinates can be edited in the inspector.
+- **Multi-select Inspector:** select multiple objects with Shift-click, then apply common visible/locked changes, align edges, distribute spacing, duplicate, delete, or drag as a group.
+- **Mini Map:** the lower-right preview shows the full level, visible objects, and the current viewport. Click it to jump the editor camera.
+- **Templates:** Level Settings can replace the current level with Empty Island, Starter Plains, Floating Challenge, Enemy Practice, or Speed Run Strip.
+- **Difficulty Estimator:** the side panel estimates easy, normal, hard, or experimental from enemy count, hazard count, jump gaps, checkpoint spacing, and level length.
 - **Undo/Redo:** toolbar buttons or `Ctrl/Cmd+Z` and `Ctrl/Cmd+Y`.
-- **Save/Load:** levels are saved to `localStorage` under `sky-sprout-runner:custom-levels:*`.
+- **Save/Load:** levels, compact generated thumbnails, and best custom-level play records are saved to `localStorage` under `sky-sprout-runner:custom-levels:*`.
 - **Import/Export:** JSON files use the Sky Forge schema and include `schemaVersion`.
 - **Test Play:** the editor deep-clones the current level and starts `LevelScene`; press `Escape` to return with the editor state still open.
 - **Validation:** the panel reports missing spawn/finish, duplicate ids, out-of-bounds objects, weak moving-platform paths, hazards near spawn, and summary info.

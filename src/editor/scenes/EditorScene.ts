@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { getLevelObjects, type LevelObject } from '../../game/data/LevelData';
 import type { EditorEventBus } from '../EditorEventBus';
 import type { EditorState } from '../schemas/levelDefaults';
+import { isObjectEditable } from '../systems/EditorAdvancedTools';
 import { snapToGrid } from '../utils/gridMath';
 
 type DragState = {
@@ -35,7 +36,7 @@ export class EditorScene extends Phaser.Scene {
     this.overlayGraphics = this.add.graphics();
     this.input.mouse?.disableContextMenu();
 
-    this.bus.on('state:changed', (state) => {
+    const unsubscribeState = this.bus.on('state:changed', (state) => {
       this.state = state;
       this.cameras.main.setBounds(
         0,
@@ -46,7 +47,7 @@ export class EditorScene extends Phaser.Scene {
       this.cameras.main.setZoom(state.camera.zoom);
       this.render();
     });
-    this.bus.on('focus', ({ x, y }) => {
+    const unsubscribeFocus = this.bus.on('focus', ({ x, y }) => {
       this.cameras.main.centerOn(x, y);
       this.emitCamera();
     });
@@ -56,6 +57,8 @@ export class EditorScene extends Phaser.Scene {
     this.input.on('pointerup', this.handlePointerUp, this);
     this.input.on('wheel', this.handleWheel, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      unsubscribeState();
+      unsubscribeFocus();
       this.input.off('pointerdown', this.handlePointerDown, this);
       this.input.off('pointermove', this.handlePointerMove, this);
       this.input.off('pointerup', this.handlePointerUp, this);
@@ -75,6 +78,11 @@ export class EditorScene extends Phaser.Scene {
     const hit = this.hitTest(world.x, world.y);
     if (this.state.activeTool === 'brush' || this.state.activeTool === 'rectangle') {
       this.bus.emit('place', world);
+      return;
+    }
+
+    if (this.state.activeTool === 'path') {
+      this.bus.emit('path:addWaypoint', world);
       return;
     }
 
@@ -164,7 +172,7 @@ export class EditorScene extends Phaser.Scene {
 
   private hitTest(x: number, y: number): LevelObject | null {
     const objects = getLevelObjects(this.state.level)
-      .filter((object) => object.visible && !object.locked)
+      .filter((object) => isObjectEditable(object, this.state.layers))
       .reverse();
     return (
       objects.find(
@@ -205,11 +213,13 @@ export class EditorScene extends Phaser.Scene {
     }
 
     for (const object of getLevelObjects(this.state.level)) {
-      if (!object.visible) {
+      if (!object.visible || !this.state.layers[object.layer].visible) {
         continue;
       }
       this.drawObject(object);
     }
+
+    this.drawSelectedPaths();
 
     for (const id of this.state.selectedIds) {
       const object = getLevelObjects(this.state.level).find((item) => item.id === id);
@@ -264,6 +274,27 @@ export class EditorScene extends Phaser.Scene {
       object.height,
       Math.min(8, object.height / 3)
     );
+  }
+
+  private drawSelectedPaths(): void {
+    for (const id of this.state.selectedIds) {
+      const object = getLevelObjects(this.state.level).find((item) => item.id === id);
+      if (!object || object.type !== 'movingBreezePlatform' || object.waypoints.length < 2) {
+        continue;
+      }
+
+      this.overlayGraphics.lineStyle(3, object.mode === 'loop' ? 0x48c78e : 0x247ba0, 0.95);
+      object.waypoints.forEach((waypoint, index) => {
+        const next = object.waypoints[index + 1] ?? (object.mode === 'loop' ? object.waypoints[0] : null);
+        this.overlayGraphics.fillStyle(0xffffff, 1);
+        this.overlayGraphics.fillCircle(waypoint.x, waypoint.y, 6);
+        this.overlayGraphics.lineStyle(2, 0x1b5768, 1);
+        this.overlayGraphics.strokeCircle(waypoint.x, waypoint.y, 6);
+        if (next) {
+          this.overlayGraphics.lineBetween(waypoint.x, waypoint.y, next.x, next.y);
+        }
+      });
+    }
   }
 }
 

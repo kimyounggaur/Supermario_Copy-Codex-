@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ControlsHelp } from './components/ControlsHelp';
 import { GameCanvas } from './components/GameCanvas';
 import { LandingPanel } from './components/LandingPanel';
@@ -18,6 +18,25 @@ export default function App() {
   const [playtestLevel, setPlaytestLevel] = useState<LevelData | null>(null);
   const [levelsVersion, setLevelsVersion] = useState(0);
   const savedLevels = useMemo(() => persistence.listLevels(), [persistence, levelsVersion]);
+
+  useEffect(() => {
+    const handleComplete = (event: Event) => {
+      const detail = (event as CustomEvent<{ levelId?: string; score?: number; elapsedSeconds?: number }>).detail;
+      if (!detail?.levelId || typeof detail.score !== 'number' || typeof detail.elapsedSeconds !== 'number') {
+        return;
+      }
+
+      persistence.recordPlayResult(detail.levelId, {
+        cleared: true,
+        elapsedSeconds: detail.elapsedSeconds,
+        score: detail.score
+      });
+      setLevelsVersion((version) => version + 1);
+    };
+
+    window.addEventListener('sky-sprout:level-complete', handleComplete);
+    return () => window.removeEventListener('sky-sprout:level-complete', handleComplete);
+  }, [persistence]);
 
   const exportSavedLevel = (levelId: string) => {
     const json = persistence.exportLevel(levelId);

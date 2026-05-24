@@ -12,7 +12,12 @@ import type {
 import { createStableId } from '../utils/idFactory';
 import { getCatalogItem } from './objectCatalog';
 
-export type LevelTemplateId = 'emptyIsland' | 'starterPlains' | 'floatingChallenge' | 'enemyPractice';
+export type LevelTemplateId =
+  | 'emptyIsland'
+  | 'starterPlains'
+  | 'floatingChallenge'
+  | 'enemyPractice'
+  | 'speedRunStrip';
 
 export interface LevelTemplateOptions {
   name?: string;
@@ -56,7 +61,7 @@ export function createLevelFromTemplate(
     metadata: {
       difficulty: templateId === 'enemyPractice' ? 'hard' : 'normal',
       tags: [],
-      estimatedTimeSeconds: 180
+      estimatedTimeSeconds: templateId === 'speedRunStrip' ? 90 : 180
     }
   };
 
@@ -176,6 +181,20 @@ export function createLevelFromTemplate(
         tileSize
       ) as PlatformData),
       id: 'moving-breeze-01'
+    });
+  }
+
+  if (templateId === 'speedRunStrip') {
+    base.name = options.name ?? 'Speed Run Strip';
+    base.description = options.description ?? 'A lean route for quick timer challenges.';
+    base.metadata.tags = ['speedrun'];
+    base.metadata.difficulty = 'normal';
+    base.terrain = base.terrain.slice(0, 3);
+    base.collectibles = [];
+    base.checkpoints = [];
+    base.hazards.push({
+      ...(getCatalogItem('gustVent')!.createObject(tileSize * 36, groundY - tileSize, tileSize) as HazardData),
+      id: 'gust-vent-01'
     });
   }
 

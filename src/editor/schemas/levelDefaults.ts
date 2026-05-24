@@ -1,5 +1,6 @@
 import type { LevelData, LevelObject } from '../../game/data/LevelData';
 import { createLevelFromTemplate } from '../data/levelTemplates';
+import { getDefaultLayerStates, type LayerStateMap } from '../systems/EditorAdvancedTools';
 
 export type EditorTool = 'select' | 'brush' | 'erase' | 'rectangle' | 'pan' | 'path';
 
@@ -27,6 +28,7 @@ export interface EditorState {
     snap: boolean;
     tileSize: number;
   };
+  layers: LayerStateMap;
   dirty: boolean;
   validationResults: ValidationResult[];
   clipboard: LevelObject[];
@@ -40,6 +42,7 @@ export function createEditorState(level = createLevelFromTemplate('emptyIsland')
     activePaletteItemId: 'skyGrassBlock',
     camera: { x: 0, y: 0, zoom: 1 },
     grid: { visible: true, snap: true, tileSize: level.world.tileSize },
+    layers: getDefaultLayerStates(),
     dirty: false,
     validationResults: [],
     clipboard: []

@@ -1,7 +1,10 @@
 import type { LevelObject } from '../../game/data/LevelData';
 import type { CatalogCategory } from '../data/objectCatalog';
 import type { EditorState, ValidationResult } from '../schemas/levelDefaults';
+import type { Alignment, DistributionAxis } from '../systems/EditorAdvancedTools';
+import { DifficultyEstimatorPanel } from './DifficultyEstimatorPanel';
 import { EditorToolbar } from './EditorToolbar';
+import { LayerPanel } from './LayerPanel';
 import { MiniMap } from './MiniMap';
 import { MobileEditorControls } from './MobileEditorControls';
 import { PalettePanel } from './PalettePanel';
@@ -28,6 +31,11 @@ interface EditorShellProps {
   onCategoryChange: (category: CatalogCategory) => void;
   onPaletteItem: (itemId: string) => void;
   onPropertyChange: (id: string, changes: Partial<LevelObject>) => void;
+  onMultiPropertyChange: (changes: Partial<LevelObject>) => void;
+  onAlign: (alignment: Alignment) => void;
+  onDistribute: (axis: DistributionAxis) => void;
+  onLayerChange: Parameters<typeof LayerPanel>[0]['onChange'];
+  onFocusPoint: (point: { x: number; y: number }) => void;
   onDuplicate: () => void;
   onDelete: () => void;
   onFocusResult: (result: ValidationResult) => void;
@@ -61,17 +69,22 @@ export function EditorShell(props: EditorShellProps) {
           onCategoryChange={props.onCategoryChange}
           onItemChange={props.onPaletteItem}
         />
+        <LayerPanel layers={props.state.layers} onChange={props.onLayerChange} />
         <div className="editor-canvas-wrap">
           <div className="editor-canvas-host" data-testid="editor-canvas-host" ref={props.canvasRef} />
-          <MiniMap state={props.state} />
+          <MiniMap state={props.state} onFocus={props.onFocusPoint} />
         </div>
         <PropertiesPanel
           state={props.state}
           selectedObject={props.selectedObject}
           onChange={props.onPropertyChange}
+          onMultiChange={props.onMultiPropertyChange}
+          onAlign={props.onAlign}
+          onDistribute={props.onDistribute}
           onDuplicate={props.onDuplicate}
           onDelete={props.onDelete}
         />
+        <DifficultyEstimatorPanel level={props.state.level} />
       </div>
       <div className="editor-statusbar">
         <span>

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type Phaser from 'phaser';
-import type { LevelData } from '../game/data/LevelData';
+import type { EditorLayer, LevelData, LevelObject, PlatformData } from '../game/data/LevelData';
 import { getLevelObjects } from '../game/data/LevelData';
 import { GAME_HEIGHT, GAME_WIDTH } from '../game/config/constants';
 import { DeleteObjectCommand } from './commands/DeleteObjectCommand';
 import { DuplicateObjectCommand } from './commands/DuplicateObjectCommand';
+import { ApplyLevelCommand } from './commands/ApplyLevelCommand';
 import type { EditorCommand } from './commands/EditorCommand';
 import { MoveObjectCommand } from './commands/MoveObjectCommand';
 import { PlaceObjectCommand } from './commands/PlaceObjectCommand';
@@ -18,6 +19,15 @@ import { getCatalogItem } from './data/objectCatalog';
 import { createLevelFromTemplate } from './data/levelTemplates';
 import type { EditorState, EditorTool, ValidationResult } from './schemas/levelDefaults';
 import { createEditorState, markDirty } from './schemas/levelDefaults';
+import {
+  addWaypoint,
+  alignObjects,
+  distributeObjects,
+  updateLayerState,
+  updateManyObjects,
+  type Alignment,
+  type DistributionAxis
+} from './systems/EditorAdvancedTools';
 import { EditorCommandStack } from './systems/EditorCommandStack';
 import { EditorPersistenceSystem } from './systems/EditorPersistenceSystem';
 import { safeLevelFileName, serializeLevel } from './systems/EditorSerializationSystem';
@@ -79,6 +89,7 @@ export function EditorRoot({ initialLevel, onBack, onTestPlay, onStateChange }: 
   const saveLevel = useCallback(() => {
     setAndPublish((previous) => {
       const saved = persistence.saveLevel(previous.level);
+      persistence.saveThumbnail(saved.id, `thumb://generated/${saved.id}`);
       const next = { ...previous, level: saved, dirty: false };
       setSaveStatus('Saved');
       return next;
@@ -122,6 +133,9 @@ export function EditorRoot({ initialLevel, onBack, onTestPlay, onStateChange }: 
         if (!item) {
           return;
         }
+        if (state.layers[item.category].locked || !state.layers[item.category].visible) {
+          return;
+        }
 
         const object = item.createObject(x, y, state.grid.tileSize);
         const duplicate = getLevelObjects(state.level).some(
@@ -142,6 +156,16 @@ export function EditorRoot({ initialLevel, onBack, onTestPlay, onStateChange }: 
       }),
       bus.on('move', ({ ids, delta }) => execute(new MoveObjectCommand(ids, delta))),
       bus.on('delete', ({ ids }) => execute(new DeleteObjectCommand(ids))),
+      bus.on('path:addWaypoint', ({ x, y }) => {
+        const object =
+          state.selectedIds.length === 1 ? findLevelObject(state.level, state.selectedIds[0]) : null;
+        if (!object || object.type !== 'movingBreezePlatform') {
+          return;
+        }
+
+        const nextPlatform = addWaypoint(object as PlatformData, { x, y });
+        execute(new UpdateObjectCommand(object.id, { waypoints: nextPlatform.waypoints } as Partial<LevelObject>));
+      }),
       bus.on('cursor', () => undefined),
       bus.on('camera', (camera) => {
         setState((previous) => ({ ...previous, camera }));
@@ -231,6 +255,10 @@ export function EditorRoot({ initialLevel, onBack, onTestPlay, onStateChange }: 
     setAndPublish((previous) => ({ ...previous, activeTool: tool }));
   };
 
+  const applyLevelEdit = (label: string, level: LevelData, selectedIds = state.selectedIds) => {
+    execute(new ApplyLevelCommand(label, level, selectedIds));
+  };
+
   const validate = () => {
     setAndPublish((previous) => ({
       ...previous,
@@ -267,6 +295,35 @@ export function EditorRoot({ initialLevel, onBack, onTestPlay, onStateChange }: 
     setSaveStatus('Unsaved');
   };
 
+  const updateLayers = (
+    layerId: EditorLayer,
+    changes: Partial<{ visible: boolean; locked: boolean; active: boolean }>
+  ) => {
+    setAndPublish((previous) => ({
+      ...previous,
+      layers: updateLayerState(previous.layers, layerId, changes),
+      selectedIds:
+        changes.visible === false || changes.locked === true
+          ? previous.selectedIds.filter((id) => findLevelObject(previous.level, id)?.layer !== layerId)
+          : previous.selectedIds
+    }));
+  };
+
+  const updateManySelected = (changes: Partial<LevelObject>) => {
+    if (state.selectedIds.length < 2) {
+      return;
+    }
+    applyLevelEdit('Update selection', updateManyObjects(state.level, state.selectedIds, changes));
+  };
+
+  const alignSelection = (alignment: Alignment) => {
+    applyLevelEdit('Align selection', alignObjects(state.level, state.selectedIds, alignment));
+  };
+
+  const distributeSelection = (axis: DistributionAxis) => {
+    applyLevelEdit('Distribute selection', distributeObjects(state.level, state.selectedIds, axis));
+  };
+
   return (
     <>
       <EditorShell
@@ -292,15 +349,27 @@ export function EditorRoot({ initialLevel, onBack, onTestPlay, onStateChange }: 
         onExport={exportLevel}
         onSettings={() => setSettingsOpen(true)}
         onHelp={() => setHelpOpen(true)}
-        onCategoryChange={(category) => setActiveCategory(category)}
+        onCategoryChange={(category) => {
+          setActiveCategory(category);
+          updateLayers(category, { active: true });
+        }}
+        onLayerChange={updateLayers}
+        onFocusPoint={(point) => busRef.current.emit('focus', point)}
         onPaletteItem={(itemId) => {
+          const item = getCatalogItem(itemId);
           setAndPublish((previous) => ({
             ...previous,
             activePaletteItemId: itemId,
-            activeTool: 'brush'
+            activeTool: 'brush',
+            layers: item
+              ? updateLayerState(previous.layers, item.category, { active: true })
+              : previous.layers
           }));
         }}
         onPropertyChange={(id, changes) => execute(new UpdateObjectCommand(id, changes))}
+        onMultiPropertyChange={updateManySelected}
+        onAlign={alignSelection}
+        onDistribute={distributeSelection}
         onDuplicate={duplicateSelection}
         onDelete={deleteSelection}
         onFocusResult={(result: ValidationResult) => {
@@ -314,6 +383,10 @@ export function EditorRoot({ initialLevel, onBack, onTestPlay, onStateChange }: 
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         onChange={updateLevel}
+        onTemplate={(templateId) => {
+          updateLevel(createLevelFromTemplate(templateId));
+          stackRef.current.clear();
+        }}
       />
       <ShortcutHelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
     </>
