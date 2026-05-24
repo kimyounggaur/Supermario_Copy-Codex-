@@ -65,7 +65,43 @@ Rune boxes release a Growth Bud when hit from below. Collecting a Growth Bud dou
 
 ## Editing The Level
 
-Edit `src/game/data/levels/level1.ts`. The level is made from plain TypeScript data:
+Story content can still be edited in `src/game/data/levels/level1.ts`, but custom stages can now be made in the browser with **Sky Forge Editor**.
+
+Open the app, choose **Create Level**, and use the palette to place original Sky Sprout Runner objects on the grid. Choose **My Levels** to reopen, play, duplicate, export, import, or delete saved custom levels.
+
+### Sky Forge Editor
+
+- **Palette:** Terrain, Platforms, Items, Enemies, Hazards, Utilities, and Decorations.
+- **Placement:** choose an object, then click the Phaser editor canvas.
+- **Selection:** use Select mode, then click an object. Drag selected objects to move them.
+- **Properties:** edit position, size, visibility, lock state, notes, speed, and patrol-style values from the right panel.
+- **Undo/Redo:** toolbar buttons or `Ctrl/Cmd+Z` and `Ctrl/Cmd+Y`.
+- **Save/Load:** levels are saved to `localStorage` under `sky-sprout-runner:custom-levels:*`.
+- **Import/Export:** JSON files use the Sky Forge schema and include `schemaVersion`.
+- **Test Play:** the editor deep-clones the current level and starts `LevelScene`; press `Escape` to return with the editor state still open.
+- **Validation:** the panel reports missing spawn/finish, duplicate ids, out-of-bounds objects, weak moving-platform paths, hazards near spawn, and summary info.
+- **Mobile:** the palette collapses into a lower drawer, with floating Copy/Delete/Save/Test actions.
+
+Keyboard shortcuts: `V` Select, `B` Brush, `E` Erase, `R` Rectangle, `H` Pan, `P` Path, `T` Test, `G` Grid, `S` Snap, `Delete` remove, `Ctrl/Cmd+S` save, `Ctrl/Cmd+D` duplicate.
+
+The editor follows the project creative rules: no external images, sounds, fonts, or famous platform-game assets. All editor objects use cloud-island, wind, sprout, and light-seed names and generated rendering.
+
+### LevelData Schema
+
+Custom levels use plain JSON data in `src/game/data/LevelData.ts`:
+
+- `world`: tile size, dimensions, theme, and background variant
+- `playerSpawn` and `finishGate`: one each for playable levels
+- `terrain`, `platforms`, `collectibles`, `powerUps`, `enemies`, `hazards`, `checkpoints`, `decorations`
+- `metadata`: difficulty, tags, and estimated time
+
+The runtime adapter converts this schema to the existing `LevelLoader` format so story levels and custom levels use the same play scene. To add a new custom object, add its type in `LevelData.ts`, add a palette entry in `src/editor/data/objectCatalog.ts`, render it in `EditorScene`, and map it in `toRuntimeLevelData` if it should affect gameplay.
+
+`localStorage` is browser-local, size-limited, and not shared across devices. Export JSON before clearing browser data or moving levels between browsers.
+
+### Story Level Source
+
+The built-in stage is made from plain TypeScript data:
 
 - `terrain`: solid rectangles, including grass, stone, cloud, sky brick, and rune box blocks
 - `movingPlatforms`: platform rectangles with `from`, `to`, and `speed`

@@ -1,5 +1,10 @@
 import Phaser from 'phaser';
 import { level1 } from '../data/levels/level1';
+import {
+  isEditorLevelData,
+  toRuntimeLevelData,
+  type LevelData as EditorLevelData
+} from '../data/LevelData';
 import { Player } from '../entities/Player';
 import { BaseEnemy } from '../entities/BaseEnemy';
 import { Checkpoint } from '../entities/Checkpoint';
@@ -26,7 +31,8 @@ import { secondsFromMs } from '../utils/timers';
 type ArcadeObject = unknown;
 
 export class LevelScene extends Phaser.Scene {
-  private readonly level: LevelData = level1;
+  private level: LevelData = level1;
+  private testPlay = false;
   private player!: Player;
   private objects!: LevelObjects;
   private inputSystem!: InputSystem;
@@ -43,6 +49,21 @@ export class LevelScene extends Phaser.Scene {
 
   constructor() {
     super('LevelScene');
+  }
+
+  init(data?: { level?: LevelData | EditorLevelData | unknown; testPlay?: boolean }): void {
+    this.testPlay = Boolean(data?.testPlay);
+    if (isEditorLevelData(data?.level)) {
+      this.level = toRuntimeLevelData(data.level);
+      return;
+    }
+
+    if (data?.level && typeof data.level === 'object' && 'world' in data.level && 'start' in data.level) {
+      this.level = data.level as LevelData;
+      return;
+    }
+
+    this.level = level1;
   }
 
   create(): void {
@@ -74,6 +95,9 @@ export class LevelScene extends Phaser.Scene {
       this.scene.stop('HudScene');
     }
     this.scene.launch('HudScene');
+    if (this.testPlay) {
+      this.createTestPlayHud();
+    }
     this.emitHud(true);
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -92,6 +116,10 @@ export class LevelScene extends Phaser.Scene {
     const input = this.inputSystem.read();
 
     if (input.pausePressed && time >= this.ignorePauseUntil) {
+      if (this.testPlay) {
+        this.returnToEditor();
+        return;
+      }
       this.pauseGame();
       return;
     }
@@ -211,6 +239,11 @@ export class LevelScene extends Phaser.Scene {
 
   private handlePointerPause(pointer: Phaser.Input.Pointer): void {
     if (this.resolved || pointer.x < this.scale.width - 140 || pointer.y > 96) {
+      return;
+    }
+
+    if (this.testPlay) {
+      this.returnToEditor();
       return;
     }
 
@@ -436,6 +469,49 @@ export class LevelScene extends Phaser.Scene {
     this.inputSystem.clearPausePress();
     this.scene.launch('PauseScene');
     this.scene.pause();
+  }
+
+  private createTestPlayHud(): void {
+    this.add
+      .text(480, 18, 'Test Play', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '20px',
+        color: '#102c31',
+        stroke: '#ffffff',
+        strokeThickness: 4
+      })
+      .setOrigin(0.5, 0)
+      .setScrollFactor(0)
+      .setDepth(DEPTHS.ui);
+
+    const button = this.add
+      .rectangle(820, 38, 180, 44, 0xf4fff7, 0.94)
+      .setStrokeStyle(2, 0x52b6c7, 1)
+      .setScrollFactor(0)
+      .setDepth(DEPTHS.ui)
+      .setInteractive({ useHandCursor: true });
+    this.add
+      .text(820, 38, 'Return to Editor', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '18px',
+        color: '#123237'
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(DEPTHS.ui + 1)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.returnToEditor());
+    button.on('pointerdown', () => this.returnToEditor());
+  }
+
+  private returnToEditor(): void {
+    if (this.resolved) {
+      return;
+    }
+
+    this.resolved = true;
+    this.scene.stop('HudScene');
+    window.dispatchEvent(new CustomEvent('sky-sprout:return-editor'));
   }
 
   private showGameOver(): void {
