@@ -22,7 +22,18 @@ export function GameCanvas({ level, skipMenu = false, testPlay = false, onReturn
     const host = hostRef.current;
     window.__SKY_SPROUT_LAUNCH = { level, skipMenu, testPlay };
     const handleReturn = () => onReturnToEditor?.();
+    const handleTestPlayKeyDown = (event: KeyboardEvent) => {
+      if (!testPlay) {
+        return;
+      }
+
+      if (event.key === 'Escape' || event.key.toLowerCase() === 'p') {
+        event.preventDefault();
+        handleReturn();
+      }
+    };
     window.addEventListener('sky-sprout:return-editor', handleReturn);
+    window.addEventListener('keydown', handleTestPlayKeyDown);
 
     void import('../game/GameRoot').then(({ createGame }) => {
       if (cancelled || gameRef.current) {
@@ -35,6 +46,7 @@ export function GameCanvas({ level, skipMenu = false, testPlay = false, onReturn
     return () => {
       cancelled = true;
       window.removeEventListener('sky-sprout:return-editor', handleReturn);
+      window.removeEventListener('keydown', handleTestPlayKeyDown);
       delete window.__SKY_SPROUT_LAUNCH;
       gameRef.current?.destroy(true);
       gameRef.current = null;

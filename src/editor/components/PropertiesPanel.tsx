@@ -121,6 +121,7 @@ export function PropertiesPanel({
               <label>
                 Mode
                 <select
+                  aria-label="Mode"
                   value={selectedPlatform.mode}
                   onChange={(event) =>
                     onChange(selectedPlatform.id, { mode: event.target.value as PlatformData['mode'] })
@@ -215,6 +216,7 @@ export function PropertiesPanel({
           <label>
             Notes
             <textarea
+              aria-label="Notes"
               value={selectedObject.notes}
               onChange={(event) => onChange(selectedObject.id, { notes: event.target.value })}
             />

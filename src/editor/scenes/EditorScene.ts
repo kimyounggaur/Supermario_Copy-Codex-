@@ -38,17 +38,27 @@ export class EditorScene extends Phaser.Scene {
 
     const unsubscribeState = this.bus.on('state:changed', (state) => {
       this.state = state;
-      this.cameras.main.setBounds(
+      const camera = this.cameras?.main;
+      if (!camera) {
+        return;
+      }
+
+      camera.setBounds(
         0,
         0,
         state.level.world.widthTiles * state.level.world.tileSize,
         state.level.world.heightTiles * state.level.world.tileSize
       );
-      this.cameras.main.setZoom(state.camera.zoom);
+      camera.setZoom(state.camera.zoom);
       this.render();
     });
     const unsubscribeFocus = this.bus.on('focus', ({ x, y }) => {
-      this.cameras.main.centerOn(x, y);
+      const camera = this.cameras?.main;
+      if (!camera) {
+        return;
+      }
+
+      camera.centerOn(x, y);
       this.emitCamera();
     });
 
@@ -166,7 +176,11 @@ export class EditorScene extends Phaser.Scene {
   }
 
   private emitCamera(): void {
-    const camera = this.cameras.main;
+    const camera = this.cameras?.main;
+    if (!camera) {
+      return;
+    }
+
     this.bus.emit('camera', { x: camera.scrollX, y: camera.scrollY, zoom: camera.zoom });
   }
 

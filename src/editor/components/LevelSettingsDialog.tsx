@@ -21,6 +21,7 @@ export function LevelSettingsDialog({ level, open, onClose, onChange, onTemplate
         <label>
           Template
           <select
+            aria-label="Template"
             defaultValue=""
             onChange={(event) => {
               if (event.target.value) {
@@ -44,6 +45,7 @@ export function LevelSettingsDialog({ level, open, onClose, onChange, onTemplate
         <label>
           Description
           <textarea
+            aria-label="Description"
             value={level.description}
             onChange={(event) => onChange({ ...level, description: event.target.value })}
           />
@@ -81,6 +83,7 @@ export function LevelSettingsDialog({ level, open, onClose, onChange, onTemplate
         <label>
           Theme
           <select
+            aria-label="Theme"
             value={level.world.theme}
             onChange={(event) =>
               onChange({

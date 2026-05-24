@@ -54,34 +54,33 @@ export function EditorRoot({ initialLevel, onBack, onTestPlay, onStateChange }: 
   const gameRef = useRef<Phaser.Game | null>(null);
   const hostRef = useRef<HTMLDivElement | null>(null);
   const initialSceneStateRef = useRef(state);
+  const onStateChangeRef = useRef(onStateChange);
   const persistence = useMemo(() => new EditorPersistenceSystem(), []);
 
-  const publishState = useCallback(
-    (next: EditorState) => {
-      busRef.current.emit('state:changed', next);
-      onStateChange?.(next);
-    },
-    [onStateChange]
-  );
+  useEffect(() => {
+    onStateChangeRef.current = onStateChange;
+  }, [onStateChange]);
+
+  const publishState = useCallback((next: EditorState) => {
+    busRef.current.emit('state:changed', next);
+    onStateChangeRef.current?.(next);
+  }, []);
 
   const setAndPublish = useCallback(
     (updater: (previous: EditorState) => EditorState) => {
       setState((previous) => {
-        const next = updater(previous);
-        publishState(next);
-        return next;
+        return updater(previous);
       });
     },
-    [publishState]
+    []
   );
 
   const execute = useCallback(
     (command: EditorCommand) => {
       setAndPublish((previous) => {
-        const next = stackRef.current.execute(previous, command);
-        setSaveStatus('Unsaved');
-        return next;
+        return stackRef.current.execute(previous, command);
       });
+      setSaveStatus('Unsaved');
     },
     [setAndPublish]
   );
@@ -91,9 +90,9 @@ export function EditorRoot({ initialLevel, onBack, onTestPlay, onStateChange }: 
       const saved = persistence.saveLevel(previous.level);
       persistence.saveThumbnail(saved.id, `thumb://generated/${saved.id}`);
       const next = { ...previous, level: saved, dirty: false };
-      setSaveStatus('Saved');
       return next;
     });
+    setSaveStatus('Saved');
   }, [persistence, setAndPublish]);
 
   useEffect(() => {
@@ -173,11 +172,19 @@ export function EditorRoot({ initialLevel, onBack, onTestPlay, onStateChange }: 
     ];
 
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
-  }, [execute, setAndPublish, state.activePaletteItemId, state.grid.tileSize, state.level]);
+  }, [
+    execute,
+    setAndPublish,
+    state.activePaletteItemId,
+    state.grid.tileSize,
+    state.layers,
+    state.level,
+    state.selectedIds
+  ]);
 
   useEffect(() => {
-    busRef.current.emit('state:changed', state);
-  }, [state]);
+    publishState(state);
+  }, [publishState, state]);
 
   useEffect(() => {
     if (!state.dirty) {

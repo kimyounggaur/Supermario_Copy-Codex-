@@ -10,6 +10,7 @@ import { safeLevelFileName } from './editor/systems/EditorSerializationSystem';
 import type { LevelData } from './game/data/LevelData';
 
 type AppMode = 'menu' | 'story' | 'editor' | 'levels';
+type MenuPanel = 'controls' | 'credits' | null;
 
 export default function App() {
   const persistence = useMemo(() => new EditorPersistenceSystem(), []);
@@ -17,6 +18,7 @@ export default function App() {
   const [currentLevel, setCurrentLevel] = useState<LevelData | undefined>();
   const [playtestLevel, setPlaytestLevel] = useState<LevelData | null>(null);
   const [levelsVersion, setLevelsVersion] = useState(0);
+  const [menuPanel, setMenuPanel] = useState<MenuPanel>(null);
   const savedLevels = useMemo(() => persistence.listLevels(), [persistence, levelsVersion]);
 
   useEffect(() => {
@@ -87,9 +89,40 @@ export default function App() {
             >
               My Levels
             </button>
-            <button type="button">Controls</button>
-            <button type="button">Credits</button>
+            <button type="button" onClick={() => setMenuPanel('controls')}>
+              Controls
+            </button>
+            <button type="button" onClick={() => setMenuPanel('credits')}>
+              Credits
+            </button>
           </div>
+          {menuPanel ? (
+            <div
+              className="menu-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label={menuPanel === 'controls' ? 'Controls' : 'Credits'}
+            >
+              <div className="menu-modal__body">
+                {menuPanel === 'controls' ? (
+                  <>
+                    <h2>Controls</h2>
+                    <p>Move with arrow keys or A and D. Jump with Space, W, or Up.</p>
+                    <p>Hold Shift to run. Press P or Escape to pause. Press R to restart.</p>
+                  </>
+                ) : (
+                  <>
+                    <h2>Credits</h2>
+                    <p>Sky Sprout Runner is an original cloud-island platformer prototype.</p>
+                    <p>Built with React, Phaser, and the Sky Forge level editor.</p>
+                  </>
+                )}
+                <button type="button" onClick={() => setMenuPanel(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          ) : null}
         </section>
       ) : null}
 

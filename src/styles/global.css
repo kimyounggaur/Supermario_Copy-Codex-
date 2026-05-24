@@ -85,6 +85,33 @@ select {
   gap: 12px;
 }
 
+.menu-modal {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(11, 36, 48, 0.38);
+}
+
+.menu-modal__body {
+  display: grid;
+  gap: 12px;
+  width: min(440px, 92vw);
+  padding: 18px;
+  border: 1px solid rgba(24, 80, 88, 0.22);
+  border-radius: 8px;
+  background: rgba(250, 255, 251, 0.96);
+  box-shadow: 0 18px 50px rgba(11, 36, 48, 0.22);
+  text-align: left;
+}
+
+.menu-modal__body h2,
+.menu-modal__body p {
+  margin: 0;
+}
+
 .main-menu button,
 .level-list-screen button,
 .editor-root button,
