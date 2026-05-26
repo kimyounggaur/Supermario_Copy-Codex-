@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { level1 } from '../../src/game/data/levels/level1';
+import { storyLevels } from '../../src/game/data/levels';
 import type { LevelData } from '../../src/game/types';
 import { validateLevelData } from '../../src/game/systems/levelValidation';
 
@@ -12,6 +13,60 @@ describe('level validation', () => {
     expect(level1.start.x).toBeLessThan(level1.finishGate.x);
     expect(level1.checkpoints.length).toBeGreaterThan(0);
     expect(level1.terrain.length).toBeGreaterThan(0);
+  });
+
+  it('accepts every story level and keeps required exits', () => {
+    expect(storyLevels).toHaveLength(4);
+    expect(storyLevels.map((level) => level.collectibles.length)).toEqual([14, 16, 18, 20]);
+
+    for (const level of storyLevels) {
+      expect(validateLevelData(level)).toEqual([]);
+      expect(level.finishGate).toBeTruthy();
+      expect(level.checkpoints.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('keeps the authored level 2-4 encounter counts', () => {
+    const expected = [
+      {
+        level: storyLevels[1],
+        movingPlatforms: 2,
+        hazards: 4,
+        checkpoints: 2,
+        powerUps: 2,
+        enemies: { driftBug: 4, puffHopper: 1, windWisp: 1 }
+      },
+      {
+        level: storyLevels[2],
+        movingPlatforms: 4,
+        hazards: 5,
+        checkpoints: 2,
+        powerUps: 2,
+        enemies: { driftBug: 3, puffHopper: 2, windWisp: 3 }
+      },
+      {
+        level: storyLevels[3],
+        movingPlatforms: 5,
+        hazards: 6,
+        checkpoints: 2,
+        powerUps: 2,
+        enemies: { driftBug: 4, puffHopper: 3, windWisp: 3 }
+      }
+    ];
+
+    for (const item of expected) {
+      const enemyCounts = {
+        driftBug: item.level.enemies.filter((enemy) => enemy.kind === 'driftBug').length,
+        puffHopper: item.level.enemies.filter((enemy) => enemy.kind === 'puffHopper').length,
+        windWisp: item.level.enemies.filter((enemy) => enemy.kind === 'windWisp').length
+      };
+
+      expect(item.level.movingPlatforms.length).toBe(item.movingPlatforms);
+      expect(item.level.hazards.length).toBe(item.hazards);
+      expect(item.level.checkpoints.length).toBe(item.checkpoints);
+      expect(item.level.powerUps.length).toBe(item.powerUps);
+      expect(enemyCounts).toEqual(item.enemies);
+    }
   });
 
   it('includes interactive rune boxes embedded between sky bricks', () => {

@@ -3,9 +3,19 @@ import { DEPTHS, GAME_HEIGHT, GAME_WIDTH } from '../config/constants';
 import { AudioManager } from '../systems/AudioManager';
 import { publishGameState } from '../utils/debugState';
 
+interface PauseSceneData {
+  levelNumber: number;
+}
+
 export class PauseScene extends Phaser.Scene {
+  private levelNumber = 1;
+
   constructor() {
     super('PauseScene');
+  }
+
+  init(data?: Partial<PauseSceneData>): void {
+    this.levelNumber = data?.levelNumber ?? 1;
   }
 
   create(): void {
@@ -74,7 +84,7 @@ export class PauseScene extends Phaser.Scene {
     AudioManager.get().play('button');
     this.scene.stop('HudScene');
     this.scene.stop('LevelScene');
-    this.scene.start('LevelScene');
+    this.scene.start('LevelScene', { levelNumber: this.levelNumber });
   }
 
   private backToMenu(): void {

@@ -5,6 +5,9 @@ import { publishGameState } from '../utils/debugState';
 
 export class MenuScene extends Phaser.Scene {
   private started = false;
+  private subtitle?: Phaser.GameObjects.Text;
+  private startButtonItems: Array<Phaser.GameObjects.Rectangle | Phaser.GameObjects.Text> = [];
+  private levelSelectItems: Array<Phaser.GameObjects.Rectangle | Phaser.GameObjects.Text> = [];
 
   constructor() {
     super('MenuScene');
@@ -15,9 +18,8 @@ export class MenuScene extends Phaser.Scene {
     publishGameState('title');
     this.drawScene();
 
-    this.input.once('pointerdown', this.startGame, this);
-    this.input.keyboard?.once('keydown-ENTER', this.startGame, this);
-    this.input.keyboard?.once('keydown-SPACE', this.startGame, this);
+    this.input.keyboard?.once('keydown-ENTER', this.openLevelSelect, this);
+    this.input.keyboard?.once('keydown-SPACE', this.openLevelSelect, this);
   }
 
   private drawScene(): void {
@@ -44,7 +46,7 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(DEPTHS.ui);
 
-    this.add
+    this.subtitle = this.add
       .text(GAME_WIDTH / 2, 205, 'Wind Island Ascent', {
         fontFamily: 'Arial, sans-serif',
         fontSize: '22px',
@@ -71,17 +73,68 @@ export class MenuScene extends Phaser.Scene {
 
     button.on('pointerover', () => button.setFillStyle(0xe4fff1, 1));
     button.on('pointerout', () => button.setFillStyle(0xf4fff7, 0.92));
-    button.on('pointerdown', this.startGame, this);
-    label.setInteractive({ useHandCursor: true }).on('pointerdown', this.startGame, this);
+    button.on('pointerdown', this.openLevelSelect, this);
+    label.setInteractive({ useHandCursor: true }).on('pointerdown', this.openLevelSelect, this);
+    this.startButtonItems = [button, label];
   }
 
-  private startGame(): void {
+  private openLevelSelect(): void {
+    if (this.levelSelectItems.length > 0) {
+      return;
+    }
+
+    AudioManager.get().play('button');
+    this.subtitle?.setVisible(false);
+    for (const item of this.startButtonItems) {
+      item.setVisible(false);
+      if (item.input) {
+        item.disableInteractive();
+      }
+    }
+
+    const levels = [
+      'Level 1  Wind Island Ascent',
+      'Level 2  구름 섬의 시련',
+      'Level 3  별빛 폭풍 전장',
+      'Level 4  고대 신전의 최후 관문'
+    ];
+
+    levels.forEach((label, index) => {
+      this.createLevelButton(300 + index * 62, index + 1, label);
+    });
+  }
+
+  private createLevelButton(y: number, levelNumber: number, label: string): void {
+    const button = this.add
+      .rectangle(GAME_WIDTH / 2, y, 340, 52, 0xf0fef4, 0.96)
+      .setStrokeStyle(2, 0x2d9560, 0.95)
+      .setDepth(DEPTHS.ui)
+      .setInteractive({ useHandCursor: true });
+    const text = this.add
+      .text(GAME_WIDTH / 2, y, label, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '20px',
+        color: '#123237'
+      })
+      .setOrigin(0.5)
+      .setDepth(DEPTHS.ui + 1)
+      .setInteractive({ useHandCursor: true });
+
+    const startSelectedLevel = () => this.startGame(levelNumber);
+    button.on('pointerover', () => button.setFillStyle(0xe4fff1, 1));
+    button.on('pointerout', () => button.setFillStyle(0xf0fef4, 0.96));
+    button.on('pointerdown', startSelectedLevel);
+    text.on('pointerdown', startSelectedLevel);
+    this.levelSelectItems.push(button, text);
+  }
+
+  private startGame(levelNumber: number): void {
     if (this.started) {
       return;
     }
 
     this.started = true;
     AudioManager.get().play('button');
-    this.scene.start('LevelScene');
+    this.scene.start('LevelScene', { levelNumber });
   }
 }

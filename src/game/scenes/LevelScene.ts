@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { level1 } from '../data/levels/level1';
+import { storyLevels } from '../data/levels/index';
 import {
   isEditorLevelData,
   toRuntimeLevelData,
@@ -31,7 +31,8 @@ import { secondsFromMs } from '../utils/timers';
 type ArcadeObject = unknown;
 
 export class LevelScene extends Phaser.Scene {
-  private level: LevelData = level1;
+  private level: LevelData = storyLevels[0];
+  private levelNumber = 1;
   private testPlay = false;
   private player!: Player;
   private objects!: LevelObjects;
@@ -51,7 +52,8 @@ export class LevelScene extends Phaser.Scene {
     super('LevelScene');
   }
 
-  init(data?: { level?: LevelData | EditorLevelData | unknown; testPlay?: boolean }): void {
+  init(data?: { level?: LevelData | EditorLevelData | unknown; levelNumber?: number; testPlay?: boolean }): void {
+    this.levelNumber = data?.levelNumber ?? 1;
     this.testPlay = Boolean(data?.testPlay);
     if (isEditorLevelData(data?.level)) {
       this.level = toRuntimeLevelData(data.level);
@@ -63,7 +65,8 @@ export class LevelScene extends Phaser.Scene {
       return;
     }
 
-    this.level = level1;
+    const idx = (data?.levelNumber ?? 1) - 1;
+    this.level = storyLevels[Math.min(Math.max(idx, 0), storyLevels.length - 1)];
   }
 
   create(): void {
@@ -467,7 +470,7 @@ export class LevelScene extends Phaser.Scene {
 
   private pauseGame(): void {
     this.inputSystem.clearPausePress();
-    this.scene.launch('PauseScene');
+    this.scene.launch('PauseScene', { levelNumber: this.levelNumber });
     this.scene.pause();
   }
 
@@ -523,7 +526,8 @@ export class LevelScene extends Phaser.Scene {
     publishGameState('gameOver');
     this.scene.launch('GameOverScene', {
       score: this.scoreSystem.getScore(),
-      bestScore: this.scoreSystem.getBestScore()
+      bestScore: this.scoreSystem.getBestScore(),
+      levelNumber: this.levelNumber
     });
     this.scene.pause();
   }
@@ -555,7 +559,8 @@ export class LevelScene extends Phaser.Scene {
       shards: this.scoreSystem.getShards(),
       totalShards: this.level.collectibles.length,
       elapsedSeconds,
-      bestScore
+      bestScore,
+      levelNumber: this.levelNumber
     });
     this.scene.pause();
   }

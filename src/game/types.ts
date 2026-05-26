@@ -103,6 +103,7 @@ export interface LevelCompletePayload {
   totalShards: number;
   elapsedSeconds: number;
   bestScore: number;
+  levelNumber?: number;
 }
 
 export interface LevelObjects {

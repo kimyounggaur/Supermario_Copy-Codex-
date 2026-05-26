@@ -126,7 +126,7 @@ export default function App() {
         </section>
       ) : null}
 
-      {mode === 'story' ? <GameCanvas skipMenu level={currentLevel} /> : null}
+      {mode === 'story' ? <GameCanvas skipMenu={Boolean(currentLevel)} level={currentLevel} /> : null}
 
       {mode === 'editor' ? (
         <EditorRoot

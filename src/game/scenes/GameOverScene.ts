@@ -6,11 +6,13 @@ import { publishGameState } from '../utils/debugState';
 interface GameOverData {
   score: number;
   bestScore: number;
+  levelNumber: number;
 }
 
 export class GameOverScene extends Phaser.Scene {
   private score = 0;
   private bestScore = 0;
+  private levelNumber = 1;
 
   constructor() {
     super('GameOverScene');
@@ -19,6 +21,7 @@ export class GameOverScene extends Phaser.Scene {
   init(data: Partial<GameOverData>): void {
     this.score = data.score ?? 0;
     this.bestScore = data.bestScore ?? 0;
+    this.levelNumber = data.levelNumber ?? 1;
   }
 
   create(): void {
@@ -68,7 +71,7 @@ export class GameOverScene extends Phaser.Scene {
     AudioManager.get().play('button');
     this.scene.stop('HudScene');
     this.scene.stop('LevelScene');
-    this.scene.start('LevelScene');
+    this.scene.start('LevelScene', { levelNumber: this.levelNumber });
   }
 
   private backToMenu(): void {

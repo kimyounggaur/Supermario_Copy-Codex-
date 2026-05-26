@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { DEPTHS, GAME_HEIGHT, GAME_WIDTH } from '../config/constants';
+import { storyLevels } from '../data/levels/index';
 import { AudioManager } from '../systems/AudioManager';
 import type { LevelCompletePayload } from '../types';
 import { publishGameState } from '../utils/debugState';
@@ -12,12 +13,14 @@ export class LevelCompleteScene extends Phaser.Scene {
     elapsedSeconds: 0,
     bestScore: 0
   };
+  private levelNumber = 1;
 
   constructor() {
     super('LevelCompleteScene');
   }
 
   init(data: Partial<LevelCompletePayload>): void {
+    this.levelNumber = data.levelNumber ?? 1;
     this.payload = { ...this.payload, ...data };
   }
 
@@ -58,8 +61,10 @@ export class LevelCompleteScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(DEPTHS.overlay + 1);
 
-    this.createButton(380, 'Play Again', () => this.restart());
-    this.createButton(445, 'Menu', () => this.backToMenu());
+    const nextLabel = this.levelNumber >= storyLevels.length ? 'Back to Menu' : 'Next Level →';
+    this.createButton(350, nextLabel, () => this.advance());
+    this.createButton(415, 'Play Again', () => this.restart());
+    this.createButton(480, 'Menu', () => this.backToMenu());
     this.input.keyboard?.once('keydown-ENTER', this.restart, this);
   }
 
@@ -86,7 +91,19 @@ export class LevelCompleteScene extends Phaser.Scene {
     AudioManager.get().play('button');
     this.scene.stop('HudScene');
     this.scene.stop('LevelScene');
-    this.scene.start('LevelScene');
+    this.scene.start('LevelScene', { levelNumber: this.levelNumber });
+  }
+
+  private advance(): void {
+    AudioManager.get().play('button');
+    this.scene.stop('HudScene');
+    this.scene.stop('LevelScene');
+    if (this.levelNumber >= storyLevels.length) {
+      this.scene.start('MenuScene');
+      return;
+    }
+
+    this.scene.start('LevelScene', { levelNumber: this.levelNumber + 1 });
   }
 
   private backToMenu(): void {
