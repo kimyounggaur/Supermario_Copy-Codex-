@@ -1,4 +1,5 @@
 import { catalogCategories, objectCatalog, type CatalogCategory } from '../data/objectCatalog';
+import { getTextureIconDataUrl } from '../../render/iconDataUrls';
 
 interface PalettePanelProps {
   activeCategory: CatalogCategory;
@@ -49,7 +50,11 @@ export function PalettePanel({
             className={item.id === activeItemId ? 'is-selected' : ''}
             onClick={() => onItemChange(item.id)}
           >
-            <span className={`palette-swatch palette-swatch--${item.category}`} />
+            <span className={`palette-swatch palette-swatch--${item.category}`}>
+              {getTextureIconDataUrl(item.id) ? (
+                <img src={getTextureIconDataUrl(item.id) ?? ''} alt="" />
+              ) : null}
+            </span>
             <span>{item.label}</span>
           </button>
         ))}

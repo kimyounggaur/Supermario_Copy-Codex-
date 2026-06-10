@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ControlsHelp } from './components/ControlsHelp';
 import { GameCanvas } from './components/GameCanvas';
 import { LandingPanel } from './components/LandingPanel';
+import { TextureGallery } from './components/TextureGallery';
 import { EditorRoot } from './editor/EditorRoot';
 import { LevelListPanel } from './editor/components/LevelListPanel';
 import { createLevelFromTemplate } from './editor/data/levelTemplates';
@@ -13,6 +14,7 @@ type AppMode = 'menu' | 'story' | 'editor' | 'levels';
 type MenuPanel = 'controls' | 'credits' | null;
 
 export default function App() {
+  const isTextureGallery = window.location.pathname === '/debug/texture-gallery';
   const persistence = useMemo(() => new EditorPersistenceSystem(), []);
   const [mode, setMode] = useState<AppMode>('menu');
   const [currentLevel, setCurrentLevel] = useState<LevelData | undefined>();
@@ -57,6 +59,9 @@ export default function App() {
 
   return (
     <main className="app-shell" aria-label="Sky Sprout Runner game">
+      {isTextureGallery ? <TextureGallery /> : null}
+      {!isTextureGallery ? (
+        <>
       <LandingPanel />
       {mode === 'menu' ? (
         <section className="main-menu" aria-label="Main menu">
@@ -126,7 +131,7 @@ export default function App() {
         </section>
       ) : null}
 
-      {mode === 'story' ? <GameCanvas skipMenu={Boolean(currentLevel)} level={currentLevel} /> : null}
+      {mode === 'story' ? <GameCanvas skipMenu level={currentLevel} /> : null}
 
       {mode === 'editor' ? (
         <EditorRoot
@@ -191,6 +196,8 @@ export default function App() {
       ) : null}
 
       {mode === 'menu' ? <ControlsHelp /> : null}
+        </>
+      ) : null}
     </main>
   );
 }

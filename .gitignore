@@ -8,3 +8,6 @@ test-results
 node_modules/.tmp
 01 Source/
 슈퍼마리오 응용게임 프롬프트*.md
+*.log
+.DS_Store
+Thumbs.db
