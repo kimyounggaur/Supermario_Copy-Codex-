@@ -16,6 +16,11 @@ export class HudScene extends Phaser.Scene {
   }
 
   create(): void {
+    if (window.__SKY_SPROUT_DOM_UI) {
+      this.game.events.on(EVENTS.hudUpdate, publishHudState);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.game.events.off(EVENTS.hudUpdate, publishHudState));
+      return;
+    }
     const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
       fontFamily: 'Arial, sans-serif',
       fontSize: '18px',

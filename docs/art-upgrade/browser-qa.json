@@ -1,0 +1,161 @@
+[
+  {
+    "name": "desktop",
+    "errors": [],
+    "before": {
+      "health": 3,
+      "shards": 0,
+      "totalShards": 14,
+      "score": 0,
+      "elapsedSeconds": 8,
+      "checkpointLabel": "Start",
+      "powerActive": false,
+      "highScore": 0
+    },
+    "after": {
+      "health": 3,
+      "shards": 1,
+      "totalShards": 14,
+      "score": 100,
+      "elapsedSeconds": 12,
+      "checkpointLabel": "Start",
+      "powerActive": false,
+      "highScore": 0
+    },
+    "layout": {
+      "overflow": false,
+      "canvas": [
+        928,
+        540
+      ],
+      "buttons": [
+        {
+          "label": "Move left",
+          "w": 76,
+          "h": 62
+        },
+        {
+          "label": "Move right",
+          "w": 76,
+          "h": 62
+        },
+        {
+          "label": "Run",
+          "w": 76,
+          "h": 62
+        },
+        {
+          "label": "Jump",
+          "w": 86,
+          "h": 62
+        }
+      ]
+    }
+  },
+  {
+    "name": "mobile",
+    "errors": [],
+    "before": {
+      "health": 3,
+      "shards": 0,
+      "totalShards": 14,
+      "score": 0,
+      "elapsedSeconds": 3,
+      "checkpointLabel": "Start",
+      "powerActive": false,
+      "highScore": 0
+    },
+    "after": {
+      "health": 3,
+      "shards": 1,
+      "totalShards": 14,
+      "score": 100,
+      "elapsedSeconds": 6,
+      "checkpointLabel": "Start",
+      "powerActive": false,
+      "highScore": 0
+    },
+    "layout": {
+      "overflow": false,
+      "canvas": [
+        360,
+        540
+      ],
+      "buttons": [
+        {
+          "label": "Move left",
+          "w": 62,
+          "h": 60
+        },
+        {
+          "label": "Move right",
+          "w": 62,
+          "h": 60
+        },
+        {
+          "label": "Run",
+          "w": 62,
+          "h": 60
+        },
+        {
+          "label": "Jump",
+          "w": 72,
+          "h": 60
+        }
+      ]
+    }
+  },
+  {
+    "name": "landscape",
+    "errors": [],
+    "before": {
+      "health": 3,
+      "shards": 0,
+      "totalShards": 14,
+      "score": 0,
+      "elapsedSeconds": 3,
+      "checkpointLabel": "Start",
+      "powerActive": false,
+      "highScore": 0
+    },
+    "after": {
+      "health": 3,
+      "shards": 1,
+      "totalShards": 14,
+      "score": 100,
+      "elapsedSeconds": 5,
+      "checkpointLabel": "Start",
+      "powerActive": false,
+      "highScore": 0
+    },
+    "layout": {
+      "overflow": false,
+      "canvas": [
+        1250,
+        400
+      ],
+      "buttons": [
+        {
+          "label": "Move left",
+          "w": 66,
+          "h": 46
+        },
+        {
+          "label": "Move right",
+          "w": 66,
+          "h": 46
+        },
+        {
+          "label": "Run",
+          "w": 66,
+          "h": 46
+        },
+        {
+          "label": "Jump",
+          "w": 66,
+          "h": 46
+        }
+      ]
+    }
+  }
+]

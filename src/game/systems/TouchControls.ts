@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { DEPTHS } from '../config/constants';
+import { TouchInputState, type TouchAction } from './TouchInputState';
 
 interface TouchButton {
   root: Phaser.GameObjects.Container;
@@ -10,80 +11,64 @@ interface TouchButton {
 export class TouchControls {
   private readonly root: Phaser.GameObjects.Container;
   private readonly buttons = new Map<string, TouchButton>();
-  private leftDown = false;
-  private rightDown = false;
-  private jumpDown = false;
-  private runDown = false;
-  private jumpPressedQueued = false;
-  private jumpReleasedQueued = false;
-  private pausePressedQueued = false;
+  private readonly state = new TouchInputState();
+  private readonly handleDomInput = (event: Event) => {
+    const { action, down } = (event as CustomEvent<{ action: TouchAction; down: boolean }>).detail;
+    this.state.set(action, down);
+  };
+  private readonly reset = () => this.state.reset();
 
   constructor(private readonly scene: Phaser.Scene) {
     this.root = scene.add.container(0, 0).setDepth(DEPTHS.touch).setScrollFactor(0);
 
-    this.createButton('left', '<', 62, 462, 74, 62, (down) => {
-      this.leftDown = down;
-    });
-    this.createButton('right', '>', 150, 462, 74, 62, (down) => {
-      this.rightDown = down;
-    });
-    this.createButton('jump', '^', 828, 452, 82, 72, (down) => {
-      if (down && !this.jumpDown) {
-        this.jumpPressedQueued = true;
-      }
-      if (!down && this.jumpDown) {
-        this.jumpReleasedQueued = true;
-      }
-      this.jumpDown = down;
-    });
-    this.createButton('run', '>>', 728, 470, 70, 54, (down) => {
-      this.runDown = down;
-    });
-    this.createButton('pause', 'II', 904, 46, 58, 44, (down) => {
-      if (down) {
-        this.pausePressedQueued = true;
-      }
-    });
+    window.addEventListener('sky-sprout:input', this.handleDomInput);
+    window.addEventListener('sky-sprout:input-reset', this.reset);
+    window.addEventListener('blur', this.reset);
+    scene.events.on(Phaser.Scenes.Events.PAUSE, this.reset);
+    if (window.__SKY_SPROUT_DOM_UI) return;
+    this.createButton('left', '<', 62, 462, 74, 62, down => this.state.set('left', down));
+    this.createButton('right', '>', 150, 462, 74, 62, down => this.state.set('right', down));
+    this.createButton('jump', '^', 828, 452, 82, 72, down => this.state.set('jump', down));
+    this.createButton('run', '>>', 728, 470, 70, 54, down => this.state.set('run', down));
+    this.createButton('pause', 'II', 904, 46, 58, 44, down => this.state.set('pause', down));
 
     this.layout();
     scene.scale.on(Phaser.Scale.Events.RESIZE, this.layout, this);
   }
 
   getLeftDown(): boolean {
-    return this.leftDown;
+    return this.state.left;
   }
 
   getRightDown(): boolean {
-    return this.rightDown;
+    return this.state.right;
   }
 
   getJumpDown(): boolean {
-    return this.jumpDown;
+    return this.state.jump;
   }
 
   getRunDown(): boolean {
-    return this.runDown;
+    return this.state.run;
   }
 
   consumeJumpPressed(): boolean {
-    const value = this.jumpPressedQueued;
-    this.jumpPressedQueued = false;
-    return value;
+    return this.state.consume('jumpPressed');
   }
 
   consumeJumpReleased(): boolean {
-    const value = this.jumpReleasedQueued;
-    this.jumpReleasedQueued = false;
-    return value;
+    return this.state.consume('jumpReleased');
   }
 
   consumePausePressed(): boolean {
-    const value = this.pausePressedQueued;
-    this.pausePressedQueued = false;
-    return value;
+    return this.state.consume('pausePressed');
   }
 
   destroy(): void {
+    window.removeEventListener('sky-sprout:input', this.handleDomInput);
+    window.removeEventListener('sky-sprout:input-reset', this.reset);
+    window.removeEventListener('blur', this.reset);
+    this.scene.events.off(Phaser.Scenes.Events.PAUSE, this.reset);
     this.scene.scale.off(Phaser.Scale.Events.RESIZE, this.layout, this);
     this.root.destroy(true);
   }

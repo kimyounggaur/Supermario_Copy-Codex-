@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { openScenePanel } from '../systems/ScenePanel';
 import { DEPTHS, GAME_HEIGHT, GAME_WIDTH } from '../config/constants';
 import { storyLevels } from '../data/levels/index';
 import { AudioManager } from '../systems/AudioManager';
@@ -26,6 +27,10 @@ export class LevelCompleteScene extends Phaser.Scene {
 
   create(): void {
     publishGameState('levelComplete');
+    if (openScenePanel(this, { kind: 'complete', ...this.payload, nextLabel: this.levelNumber >= storyLevels.length ? 'menu' : 'next' }, { next: () => this.advance(), restart: () => this.restart(), menu: () => this.backToMenu() })) {
+      this.input.keyboard?.once('keydown-ENTER', this.restart, this);
+      return;
+    }
     const collectionRate =
       this.payload.totalShards === 0
         ? 100

@@ -119,6 +119,7 @@ export interface LevelObjects {
 
 declare global {
   interface Window {
+    __SKY_SPROUT_DOM_UI?: boolean;
     __SKY_SPROUT_STATE?: GameStateName;
     __SKY_SPROUT_HUD?: HudPayload;
     __SKY_SPROUT_LAUNCH?: {

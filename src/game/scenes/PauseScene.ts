@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { openScenePanel } from '../systems/ScenePanel';
 import { DEPTHS, GAME_HEIGHT, GAME_WIDTH } from '../config/constants';
 import { AudioManager } from '../systems/AudioManager';
 import { publishGameState } from '../utils/debugState';
@@ -19,6 +20,14 @@ export class PauseScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.input.keyboard?.on('keydown', this.handleKeyDown, this);
+    window.addEventListener('keydown', this.handleWindowKeyDown);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.input.keyboard?.off('keydown', this.handleKeyDown, this);
+      window.removeEventListener('keydown', this.handleWindowKeyDown);
+    });
+    publishGameState('paused');
+    if (openScenePanel(this, { kind: 'pause' }, { resume: () => this.resumeLevel(), restart: () => this.restartLevel(), menu: () => this.backToMenu() })) return;
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x0b2430, 0.45).setOrigin(0).setDepth(DEPTHS.overlay);
     this.add
       .text(GAME_WIDTH / 2, 190, 'Paused', {
@@ -33,13 +42,7 @@ export class PauseScene extends Phaser.Scene {
     this.createButton(340, 'Restart', () => this.restartLevel());
     this.createButton(410, 'Menu', () => this.backToMenu());
 
-    this.input.keyboard?.on('keydown', this.handleKeyDown, this);
-    window.addEventListener('keydown', this.handleWindowKeyDown);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.input.keyboard?.off('keydown', this.handleKeyDown, this);
-      window.removeEventListener('keydown', this.handleWindowKeyDown);
-    });
-    publishGameState('paused');
+
   }
 
   private createButton(y: number, label: string, action: () => void): void {

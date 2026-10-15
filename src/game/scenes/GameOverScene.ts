@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { openScenePanel } from '../systems/ScenePanel';
 import { DEPTHS, GAME_HEIGHT, GAME_WIDTH } from '../config/constants';
 import { AudioManager } from '../systems/AudioManager';
 import { publishGameState } from '../utils/debugState';
@@ -26,6 +27,10 @@ export class GameOverScene extends Phaser.Scene {
 
   create(): void {
     publishGameState('gameOver');
+    if (openScenePanel(this, { kind: 'gameOver', score: this.score, bestScore: this.bestScore }, { restart: () => this.restart(), menu: () => this.backToMenu() })) {
+      this.input.keyboard?.once('keydown-ENTER', this.restart, this);
+      return;
+    }
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x16282b, 0.72).setOrigin(0).setDepth(DEPTHS.overlay);
     this.add
       .text(GAME_WIDTH / 2, 180, 'Run Ended', {

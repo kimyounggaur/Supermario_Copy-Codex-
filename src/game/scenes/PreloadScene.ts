@@ -1,8 +1,13 @@
 import Phaser from 'phaser';
+import { preloadArt } from '../../render/ArtAssets';
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
     super('PreloadScene');
+  }
+
+  preload(): void {
+    preloadArt(this);
   }
 
   create(): void {

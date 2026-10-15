@@ -28,10 +28,10 @@ test('loads, starts, shows HUD data, and pauses from the touch button', async ({
 
   await expect.poll(() => page.evaluate(() => window.__SKY_SPROUT_HUD?.health)).toBe(3);
 
-  await page.mouse.click(box.x + box.width - 56, box.y + 44);
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.__SKY_SPROUT_STATE)).toBe('paused');
 
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.5);
+  await page.getByRole('button', { name: 'Resume', exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.__SKY_SPROUT_STATE)).toBe('playing');
 
   expect(consoleErrors).toEqual([]);

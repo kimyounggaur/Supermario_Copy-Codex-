@@ -1,0 +1,285 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "file": "raster/background-islands.webp",
+      "width": 1536,
+      "height": 1024,
+      "alpha": true,
+      "bytes": 210314,
+      "sha256": "21daaa317ae9e2f8adc066c51cbbb547a1c69738320501845811bc9d12f0f34a"
+    },
+    {
+      "file": "raster/background-sky.webp",
+      "width": 1536,
+      "height": 1024,
+      "alpha": false,
+      "bytes": 86404,
+      "sha256": "3685fb8e1dd22f0eb7a077cb29a8d25309a51cf536fccaacde0c263b44d545d9"
+    },
+    {
+      "file": "raster/breeze-orb.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "bytes": 21826,
+      "sha256": "ffbcbd4e8ba58915b38f249e15d737bc3ef215c725af31569ce552f5b87924b5"
+    },
+    {
+      "file": "raster/checkpoint-lantern.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "bytes": 18964,
+      "sha256": "102f4f1467c4abb9bf9b2cf58a8652952ada76b6a3f8e6257f0a5226d53be2a2"
+    },
+    {
+      "file": "raster/drift-bug.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "bytes": 18122,
+      "sha256": "9c78a0bcade23dbac7014e6019314fa9ec58bfd6a2fe2c2102276dd096df4bde"
+    },
+    {
+      "file": "raster/growth-bud.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "bytes": 15866,
+      "sha256": "494e58f6fc36ed2d2c09b895bb347788f2888a87c1b43f1c5f5fed7dd9c30b8a"
+    },
+    {
+      "file": "raster/light-seed.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "bytes": 14648,
+      "sha256": "00027655150bc18cbbde07736ae73c8a90db1eb2f8a491bb27a934d7be729542"
+    },
+    {
+      "file": "raster/platform-cloud.webp",
+      "width": 512,
+      "height": 288,
+      "alpha": true,
+      "bytes": 28250,
+      "sha256": "c830cca6c7c4b70aa97adb8b1c6cb6ff597bcfcf1a703d0780183915040b3c7d"
+    },
+    {
+      "file": "raster/platform-meadow.webp",
+      "width": 960,
+      "height": 448,
+      "alpha": true,
+      "bytes": 108736,
+      "sha256": "3b59ca3df3fa27b6fe9c5a3c45194ceee8b48d7d5ed6163f4dbcd2476c168986"
+    },
+    {
+      "file": "raster/sprout-fall.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "bytes": 17608,
+      "sha256": "3dae3202573c8a28f4711b1e156570068a21d9e0efec36922cf0b50a70f52f38"
+    },
+    {
+      "file": "raster/sprout-idle.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "bytes": 18092,
+      "sha256": "1d581c6abf2c4db7d817d70f39c32004e1ddb78c7796ccd65befe0cc99b7ce04"
+    },
+    {
+      "file": "raster/sprout-jump.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "bytes": 16164,
+      "sha256": "a9d8cb9625a2d230b3add282298865425ac9794ff502fc10ecf469380a44c8db"
+    },
+    {
+      "file": "raster/sprout-keyposes-strip.webp",
+      "width": 1536,
+      "height": 256,
+      "alpha": true,
+      "bytes": 104966,
+      "sha256": "bdd387c9f87e891d1667c382d9d883c05222e22930d7b0fa6a7584ae9dd988f2"
+    },
+    {
+      "file": "raster/sprout-land.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "bytes": 21578,
+      "sha256": "3d2d8d78667d5465bc22e9995e109df8b3d899101279ea3d226baa23ae4759da"
+    },
+    {
+      "file": "raster/sprout-run-a.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "bytes": 17272,
+      "sha256": "c1e2f3d80b2dc056f53c4ed49ae3dbfe40234263f1672fa17909e29af9dfa92c"
+    },
+    {
+      "file": "raster/sprout-run-b.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "bytes": 19044,
+      "sha256": "1f0f364f83bca2866a249b8be81518837396a7bf8786ab12dcfb7d39c4493ed4"
+    },
+    {
+      "file": "raster/thorn-pod.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "bytes": 19346,
+      "sha256": "a5d1a8aa82873df65b7ab5c4e51825ab5476536b63c771d75de20f6f7a4db6a6"
+    },
+    {
+      "file": "raster/tile-meadow.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "bytes": 20050,
+      "sha256": "9b420155f6db94eb007ce689091cb90637c87793d3696a5ccd3e6967d8e90f0e"
+    },
+    {
+      "file": "raster/tile-rune.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "bytes": 20356,
+      "sha256": "0c9ce96afd6367ed7016a28aecba73a5e60157bfab3292fe9b29d747a602edde"
+    },
+    {
+      "file": "svg/arrow-right.svg",
+      "width": 48,
+      "height": 48,
+      "alpha": true,
+      "bytes": 815,
+      "sha256": "7f4aa966e9703ffa7e82266fa95aa27e1c903f6a83f0b3080d9ec1402732e8ac"
+    },
+    {
+      "file": "svg/button-primary.svg",
+      "width": 320,
+      "height": 88,
+      "alpha": true,
+      "bytes": 946,
+      "sha256": "5e6cd51b26f5e314a3d6ede244a183bb69c23266510b24366f96d137625b3339"
+    },
+    {
+      "file": "svg/button-secondary.svg",
+      "width": 320,
+      "height": 88,
+      "alpha": true,
+      "bytes": 852,
+      "sha256": "86ffcef94669676fd485cd02262c24fa3ad08b832254def9efd3e74d060cf61a"
+    },
+    {
+      "file": "svg/check.svg",
+      "width": 48,
+      "height": 48,
+      "alpha": true,
+      "bytes": 805,
+      "sha256": "440ac1f8714cb0603c847cbd8cb1a3b1dd1f64d6ad870d30795ac71b9462eac8"
+    },
+    {
+      "file": "svg/fx-collect.svg",
+      "width": 192,
+      "height": 192,
+      "alpha": true,
+      "bytes": 1061,
+      "sha256": "0873bde380a4e10b1945faf572933023fd3b937fce0268c3778839fff7ef5a88"
+    },
+    {
+      "file": "svg/fx-hurt.svg",
+      "width": 192,
+      "height": 192,
+      "alpha": true,
+      "bytes": 883,
+      "sha256": "39d3732373962e608478d0b80b62b5e7bdf96ec0a483310454caaaac3f2b2ec2"
+    },
+    {
+      "file": "svg/fx-land.svg",
+      "width": 240,
+      "height": 96,
+      "alpha": true,
+      "bytes": 966,
+      "sha256": "4b8c36b4dcab714f23d1413e426fc194510eb1b7367a05c4709ef817a3805d57"
+    },
+    {
+      "file": "svg/fx-wind.svg",
+      "width": 256,
+      "height": 96,
+      "alpha": true,
+      "bytes": 892,
+      "sha256": "5e889a5793466d5c63ff4564ae7683c9ea1c0701a4cf22b36e249f838c55aaf9"
+    },
+    {
+      "file": "svg/health-leaf.svg",
+      "width": 48,
+      "height": 48,
+      "alpha": true,
+      "bytes": 903,
+      "sha256": "54713714bbf932ea002e559cf12264d1c8893d23ef4ada2568955dd0d45e67fb"
+    },
+    {
+      "file": "svg/hud-pill.svg",
+      "width": 320,
+      "height": 88,
+      "alpha": true,
+      "bytes": 866,
+      "sha256": "d270dd1a1f62feaf04c4b9927fc1312be374af618e633626cb15c59391d9e876"
+    },
+    {
+      "file": "svg/jump.svg",
+      "width": 48,
+      "height": 48,
+      "alpha": true,
+      "bytes": 813,
+      "sha256": "1e4b354e0e5d525f46572124c6d92358c299ead2e18d30426624175c957e2b0d"
+    },
+    {
+      "file": "svg/pause.svg",
+      "width": 48,
+      "height": 48,
+      "alpha": true,
+      "bytes": 811,
+      "sha256": "9f66a9349957b7868e054bf21e7822de122d19af13fa55668fc8a7c0489cb6c5"
+    },
+    {
+      "file": "svg/restart.svg",
+      "width": 48,
+      "height": 48,
+      "alpha": true,
+      "bytes": 822,
+      "sha256": "00e5fa16dceb786070f6286959d5d8a67e1bb20d55a501f9aa1b1302c47a07a7"
+    },
+    {
+      "file": "svg/run.svg",
+      "width": 48,
+      "height": 48,
+      "alpha": true,
+      "bytes": 822,
+      "sha256": "617ad0c9cbd4bc7c17ba89e7f83e56b81c9e54b1a4c6c743b732b78c158a84b2"
+    },
+    {
+      "file": "svg/seed-icon.svg",
+      "width": 48,
+      "height": 48,
+      "alpha": true,
+      "bytes": 920,
+      "sha256": "c4e678629c2b638ff5098696a91c7d78f99a7543d2d25da39a30215769d84b00"
+    },
+    {
+      "file": "svg/sound.svg",
+      "width": 48,
+      "height": 48,
+      "alpha": true,
+      "bytes": 834,
+      "sha256": "742199c731028c799d219f75bec7ee9d87190023fb0a2b5793510f71d3b097aa"
+    }
+  ]
+}

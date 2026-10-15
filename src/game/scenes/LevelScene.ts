@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { GameArt } from '../../render/GameArt';
 import { storyLevels } from '../data/levels/index';
 import {
   isEditorLevelData,
@@ -42,6 +43,7 @@ export class LevelScene extends Phaser.Scene {
   private scoreSystem!: ScoreSystem;
   private growthBuds!: Phaser.Physics.Arcade.Group;
   private audio!: AudioManager;
+  private art!: GameArt;
   private startedAt = 0;
   private lastHudAt = 0;
   private wasOnGround = false;
@@ -86,6 +88,13 @@ export class LevelScene extends Phaser.Scene {
     this.growthBuds = this.physics.add.group({ allowGravity: true, immovable: false });
     this.player = new Player(this, this.level.start.x, this.level.start.y);
     this.player.resetForNewRun();
+    this.art = new GameArt(this);
+    for (const group of Object.values(this.objects)) {
+      for (const child of group.getChildren()) {
+        if (child instanceof Phaser.GameObjects.Image || child instanceof Phaser.GameObjects.Sprite) this.art.attach(child);
+      }
+    }
+    this.art.attach(this.player);
 
     this.setupPhysics();
     this.setupPlayerEvents();
@@ -98,7 +107,7 @@ export class LevelScene extends Phaser.Scene {
       this.scene.stop('HudScene');
     }
     this.scene.launch('HudScene');
-    if (this.testPlay) {
+    if (this.testPlay && !window.__SKY_SPROUT_DOM_UI) {
       this.createTestPlayHud();
     }
     this.emitHud(true);
@@ -147,6 +156,18 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private drawBackground(): void {
+    if (this.textures.exists('art-background-sky')) {
+      const sky = this.add.image(0, 0, 'art-background-sky').setOrigin(0).setScrollFactor(0).setDepth(DEPTHS.background);
+      const fit = () => sky.setDisplaySize(Math.max(this.scale.width, this.scale.height * 1.5), this.scale.height);
+      fit();
+      this.scale.on(Phaser.Scale.Events.RESIZE, fit);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scale.off(Phaser.Scale.Events.RESIZE, fit));
+      for (let x = -200; x < this.level.world.width * 0.22 + 1300; x += 1152) {
+        this.add.image(x, 0, 'art-background-islands').setOrigin(0).setDisplaySize(1152, 768)
+          .setScrollFactor(0.22, 0.12).setAlpha(0.63).setDepth(DEPTHS.background + 1);
+      }
+      return;
+    }
     const graphics = this.add.graphics().setDepth(DEPTHS.background);
     graphics.fillGradientStyle(0x7dd6ff, 0x7dd6ff, 0xc2f4ff, 0xc2f4ff, 1);
     graphics.fillRect(0, 0, this.level.world.width, this.level.world.height);
@@ -241,6 +262,7 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private handlePointerPause(pointer: Phaser.Input.Pointer): void {
+    if (window.__SKY_SPROUT_DOM_UI) return;
     if (this.resolved || pointer.x < this.scale.width - 140 || pointer.y > 96) {
       return;
     }
@@ -302,6 +324,7 @@ export class LevelScene extends Phaser.Scene {
     this.scoreSystem.addShard();
     this.audio.play('collect');
     this.particles.collectSpark(collectibleObject.x, collectibleObject.y);
+    this.art.burst(collectibleObject.x, collectibleObject.y, 'collect');
     this.emitHud(true);
   }
 
@@ -349,6 +372,7 @@ export class LevelScene extends Phaser.Scene {
   private spawnGrowthBud(x: number, y: number): void {
     const bud = new GrowthBud(this, x, y);
     this.growthBuds.add(bud);
+    this.art.attach(bud);
     this.particles.collectSpark(x, y - 24);
   }
 
@@ -463,6 +487,7 @@ export class LevelScene extends Phaser.Scene {
     if (onGround && !this.wasOnGround) {
       this.audio.play('land');
       this.particles.landDust(this.player.x, this.player.y);
+      this.art.burst(body.center.x, body.bottom, 'land');
     }
 
     this.wasOnGround = onGround;

@@ -15,4 +15,5 @@ export function publishHudState(payload: HudPayload): void {
   }
 
   window.__SKY_SPROUT_HUD = payload;
+  window.dispatchEvent(new CustomEvent('sky-sprout:hud', { detail: payload }));
 }
