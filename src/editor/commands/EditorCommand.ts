@@ -1,4 +1,4 @@
-import type { EditorState } from '../schemas/levelDefaults';
+import type { EditorState } from "../schemas/levelDefaults";
 
 export interface EditorCommand {
   id: string;

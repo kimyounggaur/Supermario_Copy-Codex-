@@ -1,0 +1,24 @@
+:root {
+  --ink: #174b50;
+  --muted: #476b69;
+  --cream: #fffef5;
+  --cream-shade: #f5e9ca;
+  --leaf: #97df4d;
+  --leaf-deep: #328a54;
+  --sun: #ffd454;
+  --sun-shade: #e59b2b;
+  --sky: #76cdf5;
+  --air: #dff8f3;
+  --danger: #a23855;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --shadow-panel: 0 18px 48px #174b501a;
+  --shadow-button: 0 4px 0 #174b5024;
+  --radius-card: 24px;
+  --radius-button: 16px;
+}

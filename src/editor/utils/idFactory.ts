@@ -6,5 +6,5 @@ export function createId(prefix: string): string {
 }
 
 export function createStableId(prefix: string, index: number): string {
-  return `${prefix}-${String(index).padStart(2, '0')}`;
+  return `${prefix}-${String(index).padStart(2, "0")}`;
 }

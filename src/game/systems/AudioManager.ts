@@ -1,13 +1,15 @@
+import { getPreferences } from "../../ui/state/preferences";
+
 type SoundKey =
-  | 'jump'
-  | 'land'
-  | 'collect'
-  | 'hit'
-  | 'enemy'
-  | 'power'
-  | 'checkpoint'
-  | 'clear'
-  | 'button';
+  | "jump"
+  | "land"
+  | "collect"
+  | "hit"
+  | "enemy"
+  | "power"
+  | "checkpoint"
+  | "clear"
+  | "button";
 
 export class AudioManager {
   private static instance: AudioManager | null = null;
@@ -19,52 +21,59 @@ export class AudioManager {
   }
 
   play(key: SoundKey): void {
+    if (
+      !getPreferences().sound ||
+      (typeof navigator !== "undefined" &&
+        navigator.userActivation &&
+        !navigator.userActivation.hasBeenActive)
+    )
+      return;
     const context = this.getContext();
 
     if (!context) {
       return;
     }
 
-    if (context.state === 'suspended') {
-      void context.resume();
+    if (context.state === "suspended") {
+      void context.resume().catch(() => undefined);
     }
 
     switch (key) {
-      case 'jump':
-        this.tone(context, 340, 0.08, 'triangle', 0.035);
-        this.tone(context, 510, 0.08, 'sine', 0.025, 0.04);
+      case "jump":
+        this.tone(context, 340, 0.08, "triangle", 0.035);
+        this.tone(context, 510, 0.08, "sine", 0.025, 0.04);
         break;
-      case 'land':
+      case "land":
         this.noise(context, 0.06, 0.045, 550);
         break;
-      case 'collect':
-        this.tone(context, 660, 0.07, 'sine', 0.028);
-        this.tone(context, 880, 0.08, 'sine', 0.026, 0.06);
+      case "collect":
+        this.tone(context, 660, 0.07, "sine", 0.028);
+        this.tone(context, 880, 0.08, "sine", 0.026, 0.06);
         break;
-      case 'hit':
-        this.tone(context, 150, 0.14, 'sawtooth', 0.032);
-        this.tone(context, 95, 0.16, 'square', 0.018, 0.05);
+      case "hit":
+        this.tone(context, 150, 0.14, "sawtooth", 0.032);
+        this.tone(context, 95, 0.16, "square", 0.018, 0.05);
         break;
-      case 'enemy':
-        this.tone(context, 260, 0.07, 'square', 0.026);
-        this.tone(context, 520, 0.06, 'triangle', 0.028, 0.05);
+      case "enemy":
+        this.tone(context, 260, 0.07, "square", 0.026);
+        this.tone(context, 520, 0.06, "triangle", 0.028, 0.05);
         break;
-      case 'power':
-        this.tone(context, 420, 0.12, 'triangle', 0.03);
-        this.tone(context, 720, 0.16, 'sine', 0.032, 0.09);
-        this.tone(context, 980, 0.12, 'sine', 0.025, 0.19);
+      case "power":
+        this.tone(context, 420, 0.12, "triangle", 0.03);
+        this.tone(context, 720, 0.16, "sine", 0.032, 0.09);
+        this.tone(context, 980, 0.12, "sine", 0.025, 0.19);
         break;
-      case 'checkpoint':
-        this.tone(context, 520, 0.12, 'sine', 0.03);
-        this.tone(context, 780, 0.16, 'triangle', 0.028, 0.1);
+      case "checkpoint":
+        this.tone(context, 520, 0.12, "sine", 0.03);
+        this.tone(context, 780, 0.16, "triangle", 0.028, 0.1);
         break;
-      case 'clear':
-        this.tone(context, 520, 0.12, 'triangle', 0.035);
-        this.tone(context, 700, 0.12, 'triangle', 0.035, 0.13);
-        this.tone(context, 930, 0.2, 'sine', 0.035, 0.27);
+      case "clear":
+        this.tone(context, 520, 0.12, "triangle", 0.035);
+        this.tone(context, 700, 0.12, "triangle", 0.035, 0.13);
+        this.tone(context, 930, 0.2, "sine", 0.035, 0.27);
         break;
-      case 'button':
-        this.tone(context, 420, 0.05, 'sine', 0.02);
+      case "button":
+        this.tone(context, 420, 0.05, "sine", 0.02);
         break;
     }
   }
@@ -74,11 +83,18 @@ export class AudioManager {
       return this.context;
     }
 
-    if (typeof window === 'undefined' || typeof window.AudioContext === 'undefined') {
+    if (
+      typeof window === "undefined" ||
+      typeof window.AudioContext === "undefined"
+    ) {
       return null;
     }
 
-    this.context = new window.AudioContext();
+    try {
+      this.context = new window.AudioContext();
+    } catch {
+      return null;
+    }
     return this.context;
   }
 
@@ -88,7 +104,7 @@ export class AudioManager {
     durationSeconds: number,
     type: OscillatorType,
     volume: number,
-    offsetSeconds = 0
+    offsetSeconds = 0,
   ): void {
     const start = context.currentTime + offsetSeconds;
     const oscillator = context.createOscillator();
@@ -110,9 +126,12 @@ export class AudioManager {
     context: AudioContext,
     durationSeconds: number,
     volume: number,
-    filterFrequency: number
+    filterFrequency: number,
   ): void {
-    const sampleCount = Math.max(1, Math.floor(context.sampleRate * durationSeconds));
+    const sampleCount = Math.max(
+      1,
+      Math.floor(context.sampleRate * durationSeconds),
+    );
     const buffer = context.createBuffer(1, sampleCount, context.sampleRate);
     const channel = buffer.getChannelData(0);
 
@@ -124,7 +143,7 @@ export class AudioManager {
     const filter = context.createBiquadFilter();
     const gain = context.createGain();
     source.buffer = buffer;
-    filter.type = 'lowpass';
+    filter.type = "lowpass";
     filter.frequency.value = filterFrequency;
     gain.gain.value = volume;
     source.connect(filter);

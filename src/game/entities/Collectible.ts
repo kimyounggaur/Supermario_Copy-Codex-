@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { DEPTHS } from '../config/constants';
 import { getArcadeBody } from '../utils/assertions';
+import { attachEntityArt } from '../render/EntityArt';
+import { ART_TEXTURES } from '../render/artCatalog';
+import { trackDecorativeTween } from '../render/reducedMotion';
 
 export class Collectible extends Phaser.Physics.Arcade.Sprite {
   constructor(
@@ -19,8 +22,9 @@ export class Collectible extends Phaser.Physics.Arcade.Sprite {
     body.setAllowGravity(false);
     body.setImmovable(true);
     body.setSize(18, 18);
+    attachEntityArt(this, ART_TEXTURES.seed, { width: 44 });
 
-    scene.tweens.add({
+    const bob = scene.tweens.add({
       targets: this,
       y: y - 8,
       duration: 950,
@@ -28,6 +32,7 @@ export class Collectible extends Phaser.Physics.Arcade.Sprite {
       repeat: -1,
       ease: 'Sine.easeInOut'
     });
+    trackDecorativeTween(scene, bob);
   }
 
   collect(): void {

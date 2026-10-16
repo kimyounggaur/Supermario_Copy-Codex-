@@ -12,19 +12,39 @@ import { WindWisp } from '../entities/WindWisp';
 import { BaseEnemy } from '../entities/BaseEnemy';
 import { DEPTHS } from '../config/constants';
 import { getArcadeBody, getStaticBody } from '../utils/assertions';
+import { attachEntityArt } from '../render/EntityArt';
+import { ART_TEXTURES } from '../render/artCatalog';
 
 export class LevelLoader {
   constructor(private readonly scene: Phaser.Scene) {}
 
   load(level: LevelData): LevelObjects {
     const terrain = this.scene.physics.add.staticGroup();
-    const movingPlatforms = this.scene.physics.add.group({ allowGravity: false, immovable: true });
-    const collectibles = this.scene.physics.add.group({ allowGravity: false, immovable: true });
-    const powerUps = this.scene.physics.add.group({ allowGravity: false, immovable: true });
+    const movingPlatforms = this.scene.physics.add.group({
+      allowGravity: false,
+      immovable: true
+    });
+    const collectibles = this.scene.physics.add.group({
+      allowGravity: false,
+      immovable: true
+    });
+    const powerUps = this.scene.physics.add.group({
+      allowGravity: false,
+      immovable: true
+    });
     const enemies = this.scene.physics.add.group();
-    const hazards = this.scene.physics.add.group({ allowGravity: false, immovable: true });
-    const checkpoints = this.scene.physics.add.group({ allowGravity: false, immovable: true });
-    const finishGate = this.scene.physics.add.group({ allowGravity: false, immovable: true });
+    const hazards = this.scene.physics.add.group({
+      allowGravity: false,
+      immovable: true
+    });
+    const checkpoints = this.scene.physics.add.group({
+      allowGravity: false,
+      immovable: true
+    });
+    const finishGate = this.scene.physics.add.group({
+      allowGravity: false,
+      immovable: true
+    });
 
     for (const rect of level.terrain) {
       const texture = this.textureForTerrain(rect.kind);
@@ -36,7 +56,33 @@ export class LevelLoader {
       tile.setData('terrainKind', rect.kind);
       tile.setData('spent', false);
       terrain.add(tile);
-      getStaticBody(tile).setSize(rect.width, rect.height).updateFromGameObject();
+      getStaticBody(tile)
+        .setSize(rect.width, rect.height)
+        .updateFromGameObject();
+      if (rect.kind === 'grass' && rect.width >= 160) {
+        attachEntityArt(tile, ART_TEXTURES.meadow, {
+          width: rect.width,
+          height: (rect.width * 448) / 960,
+          originY: 0.24,
+          offsetY: -rect.height / 2
+        });
+      } else if (rect.kind === 'cloud') {
+        attachEntityArt(tile, ART_TEXTURES.cloud, {
+          width: rect.width,
+          height: (rect.width * 288) / 512,
+          originY: 0.14,
+          offsetY: -rect.height / 2
+        });
+      } else if (rect.kind === 'skyBrick' && rect.width === rect.height) {
+        attachEntityArt(tile, ART_TEXTURES.meadowTile, {
+          width: rect.width * 1.06
+        });
+      } else if (rect.kind === 'runeBox' && rect.width === rect.height) {
+        attachEntityArt(tile, ART_TEXTURES.rune, {
+          width: rect.width * 1.06,
+          supported: () => !tile.getData('spent')
+        });
+      }
     }
 
     for (const platformDef of level.movingPlatforms) {
@@ -57,11 +103,26 @@ export class LevelLoader {
     }
 
     for (const collectible of level.collectibles) {
-      collectibles.add(new Collectible(this.scene, collectible.x, collectible.y, collectible.id));
+      collectibles.add(
+        new Collectible(
+          this.scene,
+          collectible.x,
+          collectible.y,
+          collectible.id
+        )
+      );
     }
 
     for (const powerUp of level.powerUps) {
-      powerUps.add(new PowerUp(this.scene, powerUp.x, powerUp.y, powerUp.id, powerUp.durationMs));
+      powerUps.add(
+        new PowerUp(
+          this.scene,
+          powerUp.x,
+          powerUp.y,
+          powerUp.id,
+          powerUp.durationMs
+        )
+      );
     }
 
     for (const enemy of level.enemies) {
@@ -69,22 +130,45 @@ export class LevelLoader {
     }
 
     for (const hazard of level.hazards) {
-      hazards.add(new Hazard(this.scene, hazard.x, hazard.y, hazard.width, hazard.height));
+      hazards.add(
+        new Hazard(this.scene, hazard.x, hazard.y, hazard.width, hazard.height)
+      );
     }
 
     for (const checkpoint of level.checkpoints) {
       checkpoints.add(
-        new Checkpoint(this.scene, checkpoint.x, checkpoint.y, checkpoint.id, checkpoint.label)
+        new Checkpoint(
+          this.scene,
+          checkpoint.x,
+          checkpoint.y,
+          checkpoint.id,
+          checkpoint.label
+        )
       );
     }
 
     finishGate.add(
-      new FinishGate(this.scene, level.finishGate.x, level.finishGate.y, level.finishGate.id)
+      new FinishGate(
+        this.scene,
+        level.finishGate.x,
+        level.finishGate.y,
+        level.finishGate.id
+      )
     );
 
-    for (const group of [movingPlatforms, collectibles, powerUps, hazards, checkpoints, finishGate]) {
+    for (const group of [
+      movingPlatforms,
+      collectibles,
+      powerUps,
+      hazards,
+      checkpoints,
+      finishGate
+    ]) {
       for (const child of group.getChildren()) {
-        if (child instanceof Phaser.Physics.Arcade.Image || child instanceof Phaser.Physics.Arcade.Sprite) {
+        if (
+          child instanceof Phaser.Physics.Arcade.Image ||
+          child instanceof Phaser.Physics.Arcade.Sprite
+        ) {
           const body = getArcadeBody(child);
           body.setAllowGravity(false);
           body.setImmovable(true);
@@ -92,7 +176,16 @@ export class LevelLoader {
       }
     }
 
-    return { terrain, movingPlatforms, collectibles, powerUps, enemies, hazards, checkpoints, finishGate };
+    return {
+      terrain,
+      movingPlatforms,
+      collectibles,
+      powerUps,
+      enemies,
+      hazards,
+      checkpoints,
+      finishGate
+    };
   }
 
   private createEnemy(definition: EnemyDef): BaseEnemy {
@@ -124,7 +217,9 @@ export class LevelLoader {
     }
   }
 
-  private textureForTerrain(kind: LevelData['terrain'][number]['kind']): string {
+  private textureForTerrain(
+    kind: LevelData['terrain'][number]['kind']
+  ): string {
     switch (kind) {
       case 'grass':
         return 'terrain-grass';

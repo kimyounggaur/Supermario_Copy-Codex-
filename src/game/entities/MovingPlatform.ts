@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { DEPTHS } from '../config/constants';
 import type { Point } from '../types';
 import { getArcadeBody } from '../utils/assertions';
+import { attachEntityArt } from '../render/EntityArt';
+import { ART_TEXTURES } from '../render/artCatalog';
 
 export class MovingPlatform extends Phaser.Physics.Arcade.Image {
   private direction = 1;
@@ -32,6 +34,14 @@ export class MovingPlatform extends Phaser.Physics.Arcade.Image {
     body.setAllowGravity(false);
     body.setSize(width, height);
     body.setOffset(0, 0);
+    attachEntityArt(this, ART_TEXTURES.cloud, {
+      width,
+      height: (width * 288) / 512,
+      originY: 0.14,
+      bodyTop: true,
+      fitBodyWidth: true,
+      visibleWidthRatio: 488 / 512
+    });
 
     this.path = waypoints.length >= 2 ? waypoints : [from, to];
   }
@@ -53,7 +63,15 @@ export class MovingPlatform extends Phaser.Physics.Arcade.Image {
     const vy = (dy / Math.max(remaining, 1)) * this.speed;
     body.setVelocity(vx, vy);
 
-    if (this.path.length < 2 || Phaser.Math.Distance.Between(this.from.x, this.from.y, this.to.x, this.to.y) === 0) {
+    if (
+      this.path.length < 2 ||
+      Phaser.Math.Distance.Between(
+        this.from.x,
+        this.from.y,
+        this.to.x,
+        this.to.y
+      ) === 0
+    ) {
       body.setVelocity(0, 0);
     }
   }

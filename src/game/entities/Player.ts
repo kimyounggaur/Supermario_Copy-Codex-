@@ -4,9 +4,19 @@ import type { PlayerInput, Point } from '../types';
 import { approach } from '../utils/math';
 import { getArcadeBody } from '../utils/assertions';
 import { hasStandingRoom, type Bounds } from '../systems/standingRoom';
+import { SproutView } from '../render/SproutView';
 
-type PlayerVisualState = 'idle' | 'run' | 'jump' | 'fall' | 'hurt' | 'wall' | 'crouch';
-type ObstacleGroup = Phaser.Physics.Arcade.Group | Phaser.Physics.Arcade.StaticGroup;
+type PlayerVisualState =
+  | 'idle'
+  | 'run'
+  | 'jump'
+  | 'fall'
+  | 'hurt'
+  | 'wall'
+  | 'crouch';
+type ObstacleGroup =
+  | Phaser.Physics.Arcade.Group
+  | Phaser.Physics.Arcade.StaticGroup;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   health: number = PLAYER.maxHealth;
@@ -23,6 +33,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private wallClinging = false;
   private grown = false;
   private crouching = false;
+  private readonly artView: SproutView;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'sprout-idle');
@@ -40,6 +51,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     body.setSize(22, 34);
     body.setOffset(5, 8);
     body.setMaxVelocity(PLAYER.runSpeed + 80, PLAYER.maxFallSpeed);
+    this.artView = new SproutView(this);
   }
 
   updateFromInput(input: PlayerInput, time: number, delta: number): void {
@@ -104,6 +116,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     body.reset(this.respawnPoint.x, this.respawnPoint.y);
     body.setVelocity(0, 0);
     body.setGravityY(0);
+    this.artView.reset();
   }
 
   setCheckpoint(point: Point, label: string): void {
@@ -206,12 +219,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     };
   }
 
-  private getObstacleBounds(child: Phaser.GameObjects.GameObject): Bounds | null {
+  private getObstacleBounds(
+    child: Phaser.GameObjects.GameObject
+  ): Bounds | null {
     if (!child.active) {
       return null;
     }
 
-    const body = (child as Phaser.GameObjects.GameObject & { body?: unknown }).body;
+    const body = (child as Phaser.GameObjects.GameObject & { body?: unknown })
+      .body;
 
     if (
       body instanceof Phaser.Physics.Arcade.Body ||
@@ -248,7 +264,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
           : onGround
             ? PLAYER.acceleration
             : PLAYER.airAcceleration) * dt;
-      body.velocity.x = approach(body.velocity.x, axis * maxSpeed, acceleration);
+      body.velocity.x = approach(
+        body.velocity.x,
+        axis * maxSpeed,
+        acceleration
+      );
     } else {
       const drag = (onGround ? PLAYER.groundDrag : PLAYER.airDrag) * dt;
       body.velocity.x = approach(body.velocity.x, 0, drag);
@@ -268,7 +288,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const hasBufferedJump = time <= this.jumpBufferedUntil;
 
     if (hasBufferedJump && this.wallClinging) {
-      body.setVelocity(-this.wallDirection * PLAYER.wallJumpVelocityX, PLAYER.wallJumpVelocityY);
+      body.setVelocity(
+        -this.wallDirection * PLAYER.wallJumpVelocityX,
+        PLAYER.wallJumpVelocityY
+      );
       this.facing = this.wallDirection < 0 ? 1 : -1;
       this.airJumpsRemaining = PLAYER.maxAirJumps;
       this.jumpBufferedUntil = Number.NEGATIVE_INFINITY;
@@ -276,7 +299,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.wallClinging = false;
       this.scene.events.emit('player:jump', this.x, this.y);
     } else if (hasBufferedJump && (onGround || canUseCoyote)) {
-      const jumpVelocity = this.hasBreeze(time) ? PLAYER.poweredJumpVelocity : PLAYER.jumpVelocity;
+      const jumpVelocity = this.hasBreeze(time)
+        ? PLAYER.poweredJumpVelocity
+        : PLAYER.jumpVelocity;
       body.setVelocityY(jumpVelocity);
       this.airJumpsRemaining = PLAYER.maxAirJumps;
       this.jumpBufferedUntil = Number.NEGATIVE_INFINITY;
@@ -284,7 +309,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.scene.events.emit('player:jump', this.x, this.y);
     } else if (hasBufferedJump && this.airJumpsRemaining > 0) {
       body.setVelocityY(
-        this.hasBreeze(time) ? PLAYER.doubleJumpVelocity - 35 : PLAYER.doubleJumpVelocity
+        this.hasBreeze(time)
+          ? PLAYER.doubleJumpVelocity - 35
+          : PLAYER.doubleJumpVelocity
       );
       this.airJumpsRemaining -= 1;
       this.jumpBufferedUntil = Number.NEGATIVE_INFINITY;
@@ -301,12 +328,21 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     onGround: boolean,
     body: Phaser.Physics.Arcade.Body
   ): void {
-    const wallDirection = body.blocked.left || body.touching.left ? -1 : body.blocked.right || body.touching.right ? 1 : 0;
+    const wallDirection =
+      body.blocked.left || body.touching.left
+        ? -1
+        : body.blocked.right || body.touching.right
+          ? 1
+          : 0;
     const pressingIntoWall =
       (wallDirection < 0 && input.left) || (wallDirection > 0 && input.right);
 
     this.wallDirection = wallDirection;
-    this.wallClinging = !onGround && pressingIntoWall && wallDirection !== 0 && body.velocity.y >= -40;
+    this.wallClinging =
+      !onGround &&
+      pressingIntoWall &&
+      wallDirection !== 0 &&
+      body.velocity.y >= -40;
 
     if (this.wallClinging) {
       this.airJumpsRemaining = PLAYER.maxAirJumps;
@@ -332,19 +368,22 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         ? 'wall'
         : this.crouching && onGround
           ? 'crouch'
-        : !onGround && body.velocity.y < -20
-        ? 'jump'
-        : !onGround && body.velocity.y > 30
-          ? 'fall'
-          : Math.abs(body.velocity.x) > 20
-            ? 'run'
-            : 'idle';
+          : !onGround && body.velocity.y < -20
+            ? 'jump'
+            : !onGround && body.velocity.y > 30
+              ? 'fall'
+              : Math.abs(body.velocity.x) > 20
+                ? 'run'
+                : 'idle';
 
     if (nextState !== this.visualState) {
       this.visualState = nextState;
       this.setTexture(`sprout-${nextState}`);
     }
 
-    this.setAlpha(this.isInvulnerable(time) && Math.floor(time / 90) % 2 === 0 ? 0.55 : 1);
+    this.setAlpha(
+      this.isInvulnerable(time) && Math.floor(time / 90) % 2 === 0 ? 0.55 : 1
+    );
+    this.artView.update(nextState, onGround);
   }
 }

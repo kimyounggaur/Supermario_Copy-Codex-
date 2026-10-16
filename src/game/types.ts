@@ -1,6 +1,11 @@
-export type GameStateName = 'title' | 'playing' | 'paused' | 'gameOver' | 'levelComplete';
+export type GameStateName =
+  | "title"
+  | "playing"
+  | "paused"
+  | "gameOver"
+  | "levelComplete";
 
-export type EnemyKind = 'driftBug' | 'puffHopper' | 'windWisp';
+export type EnemyKind = "driftBug" | "puffHopper" | "windWisp";
 
 export interface Point {
   x: number;
@@ -14,14 +19,14 @@ export interface RectDef extends Point {
 }
 
 export interface TerrainDef extends RectDef {
-  kind: 'grass' | 'stone' | 'cloud' | 'skyBrick' | 'runeBox';
+  kind: "grass" | "stone" | "cloud" | "skyBrick" | "runeBox";
 }
 
 export interface MovingPlatformDef extends RectDef {
   from: Point;
   to: Point;
   waypoints?: Point[];
-  mode?: 'loop' | 'pingPong';
+  mode?: "loop" | "pingPong";
   speed: number;
 }
 
@@ -42,7 +47,7 @@ export interface EnemyDef extends Point {
 }
 
 export interface HazardDef extends RectDef {
-  kind: 'thornCrystal';
+  kind: "thornCrystal";
 }
 
 export interface CheckpointDef extends Point {
@@ -103,7 +108,6 @@ export interface LevelCompletePayload {
   totalShards: number;
   elapsedSeconds: number;
   bestScore: number;
-  levelNumber?: number;
 }
 
 export interface LevelObjects {
@@ -119,6 +123,7 @@ export interface LevelObjects {
 
 declare global {
   interface Window {
+    __SKY_SPROUT_RUN?: { levelId: string; testPlay: boolean };
     __SKY_SPROUT_STATE?: GameStateName;
     __SKY_SPROUT_HUD?: HudPayload;
     __SKY_SPROUT_LAUNCH?: {

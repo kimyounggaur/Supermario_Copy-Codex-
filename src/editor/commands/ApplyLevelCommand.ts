@@ -1,6 +1,6 @@
-import type { LevelData } from '../../game/data/LevelData';
-import type { EditorState } from '../schemas/levelDefaults';
-import type { EditorCommand } from './EditorCommand';
+import type { LevelData } from "../../game/data/LevelData";
+import type { EditorState } from "../schemas/levelDefaults";
+import type { EditorCommand } from "./EditorCommand";
 
 export class ApplyLevelCommand implements EditorCommand {
   readonly id: string;
@@ -10,7 +10,7 @@ export class ApplyLevelCommand implements EditorCommand {
   constructor(
     readonly label: string,
     private readonly nextLevel: LevelData,
-    private readonly nextSelectedIds?: string[]
+    private readonly nextSelectedIds?: string[],
   ) {
     this.id = `apply-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   }
@@ -21,7 +21,7 @@ export class ApplyLevelCommand implements EditorCommand {
     return {
       ...state,
       level: this.nextLevel,
-      selectedIds: this.nextSelectedIds ?? state.selectedIds
+      selectedIds: this.nextSelectedIds ?? state.selectedIds,
     };
   }
 
@@ -33,7 +33,7 @@ export class ApplyLevelCommand implements EditorCommand {
     return {
       ...state,
       level: this.previousLevel,
-      selectedIds: this.previousSelectedIds
+      selectedIds: this.previousSelectedIds,
     };
   }
 }

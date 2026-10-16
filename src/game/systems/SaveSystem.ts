@@ -1,4 +1,4 @@
-import { SAVE_KEYS } from '../config/constants';
+import { SAVE_KEYS } from "../config/constants";
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -25,18 +25,34 @@ export class SaveSystem {
   }
 
   getBestScore(): number {
-    const rawValue = this.storage.getItem(SAVE_KEYS.bestScore);
+    let rawValue: string | null = null;
+    try {
+      rawValue = this.storage.getItem(SAVE_KEYS.bestScore);
+    } catch {
+      return 0;
+    }
     const parsed = rawValue === null ? 0 : Number.parseInt(rawValue, 10);
     return Number.isFinite(parsed) ? parsed : 0;
   }
 
   setBestScore(score: number): void {
-    this.storage.setItem(SAVE_KEYS.bestScore, String(Math.max(0, Math.floor(score))));
+    try {
+      this.storage.setItem(
+        SAVE_KEYS.bestScore,
+        String(Math.max(0, Math.floor(score))),
+      );
+    } catch {
+      if (typeof window !== "undefined")
+        window.dispatchEvent(new CustomEvent("sky-sprout:save-error"));
+    }
   }
 
   private getDefaultStorage(): StorageLike {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      return window.localStorage;
+    try {
+      if (typeof window !== "undefined" && window.localStorage)
+        return window.localStorage;
+    } catch {
+      /* Session-only score is still playable. */
     }
 
     return new MemoryStorage();

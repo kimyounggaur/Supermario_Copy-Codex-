@@ -1,6 +1,6 @@
-import type { EditorState } from '../schemas/levelDefaults';
-import { markDirty } from '../schemas/levelDefaults';
-import type { EditorCommand } from '../commands/EditorCommand';
+import type { EditorState } from "../schemas/levelDefaults";
+import { markDirty } from "../schemas/levelDefaults";
+import type { EditorCommand } from "../commands/EditorCommand";
 
 export class EditorCommandStack {
   private readonly undoStack: EditorCommand[] = [];

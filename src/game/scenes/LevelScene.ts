@@ -1,38 +1,40 @@
-import Phaser from 'phaser';
-import { storyLevels } from '../data/levels/index';
+import Phaser from "phaser";
+import { level1 } from "../data/levels/level1";
 import {
   isEditorLevelData,
   toRuntimeLevelData,
-  type LevelData as EditorLevelData
-} from '../data/LevelData';
-import { Player } from '../entities/Player';
-import { BaseEnemy } from '../entities/BaseEnemy';
-import { Checkpoint } from '../entities/Checkpoint';
-import { Collectible } from '../entities/Collectible';
-import { FinishGate } from '../entities/FinishGate';
-import { GrowthBud } from '../entities/GrowthBud';
-import { Hazard } from '../entities/Hazard';
-import { MovingPlatform } from '../entities/MovingPlatform';
-import { PowerUp } from '../entities/PowerUp';
-import { DEPTHS, EVENTS } from '../config/constants';
-import type { HudPayload, LevelData, LevelObjects } from '../types';
-import { AudioManager } from '../systems/AudioManager';
-import { CameraSystem } from '../systems/CameraSystem';
-import { CollisionSystem } from '../systems/CollisionSystem';
-import { InputSystem } from '../systems/InputSystem';
-import { LevelLoader } from '../systems/LevelLoader';
-import { ParticleSystem } from '../systems/ParticleSystem';
-import { ScoreSystem } from '../systems/ScoreSystem';
-import { didHitBlockFromBelow } from '../systems/headHit';
-import { getArcadeBody } from '../utils/assertions';
-import { publishGameState } from '../utils/debugState';
-import { secondsFromMs } from '../utils/timers';
+  type LevelData as EditorLevelData,
+} from "../data/LevelData";
+import { Player } from "../entities/Player";
+import { BaseEnemy } from "../entities/BaseEnemy";
+import { Checkpoint } from "../entities/Checkpoint";
+import { Collectible } from "../entities/Collectible";
+import { FinishGate } from "../entities/FinishGate";
+import { GrowthBud } from "../entities/GrowthBud";
+import { Hazard } from "../entities/Hazard";
+import { MovingPlatform } from "../entities/MovingPlatform";
+import { PowerUp } from "../entities/PowerUp";
+import { DEPTHS, EVENTS } from "../config/constants";
+import type { HudPayload, LevelData, LevelObjects } from "../types";
+import { AudioManager } from "../systems/AudioManager";
+import { CameraSystem } from "../systems/CameraSystem";
+import { CollisionSystem } from "../systems/CollisionSystem";
+import { InputSystem } from "../systems/InputSystem";
+import { LevelLoader } from "../systems/LevelLoader";
+import { ParticleSystem } from "../systems/ParticleSystem";
+import { ScoreSystem } from "../systems/ScoreSystem";
+import { didHitBlockFromBelow } from "../systems/headHit";
+import { getArcadeBody } from "../utils/assertions";
+import { publishGameState } from "../utils/debugState";
+import { secondsFromMs } from "../utils/timers";
+import { getGameBridge, type UiCommand } from "../../ui/state/gameUiBridge";
+import { prefersReducedMotion } from "../../ui/state/preferences";
+import { drawWorldArt } from "../render/WorldArt";
 
 type ArcadeObject = unknown;
 
 export class LevelScene extends Phaser.Scene {
-  private level: LevelData = storyLevels[0];
-  private levelNumber = 1;
+  private level: LevelData = level1;
   private testPlay = false;
   private player!: Player;
   private objects!: LevelObjects;
@@ -42,40 +44,52 @@ export class LevelScene extends Phaser.Scene {
   private scoreSystem!: ScoreSystem;
   private growthBuds!: Phaser.Physics.Arcade.Group;
   private audio!: AudioManager;
-  private startedAt = 0;
+  private elapsedMs = 0;
   private lastHudAt = 0;
   private wasOnGround = false;
   private resolved = false;
   private ignorePauseUntil = 0;
 
   constructor() {
-    super('LevelScene');
+    super("LevelScene");
   }
 
-  init(data?: { level?: LevelData | EditorLevelData | unknown; levelNumber?: number; testPlay?: boolean }): void {
-    this.levelNumber = data?.levelNumber ?? 1;
+  init(data?: {
+    level?: LevelData | EditorLevelData | unknown;
+    testPlay?: boolean;
+  }): void {
     this.testPlay = Boolean(data?.testPlay);
     if (isEditorLevelData(data?.level)) {
       this.level = toRuntimeLevelData(data.level);
       return;
     }
 
-    if (data?.level && typeof data.level === 'object' && 'world' in data.level && 'start' in data.level) {
+    if (
+      data?.level &&
+      typeof data.level === "object" &&
+      "world" in data.level &&
+      "start" in data.level
+    ) {
       this.level = data.level as LevelData;
       return;
     }
 
-    const idx = (data?.levelNumber ?? 1) - 1;
-    this.level = storyLevels[Math.min(Math.max(idx, 0), storyLevels.length - 1)];
+    this.level = level1;
   }
 
   create(): void {
-    publishGameState('playing');
+    publishGameState("playing");
     this.resolved = false;
-    this.startedAt = this.time.now;
+    this.elapsedMs = 0;
+    this.wasOnGround = false;
     this.lastHudAt = 0;
 
-    this.physics.world.setBounds(0, 0, this.level.world.width, this.level.world.fallY + 200);
+    this.physics.world.setBounds(
+      0,
+      0,
+      this.level.world.width,
+      this.level.world.fallY + 200,
+    );
     this.drawBackground();
 
     this.audio = AudioManager.get();
@@ -83,30 +97,42 @@ export class LevelScene extends Phaser.Scene {
     this.particles = new ParticleSystem(this);
     this.inputSystem = new InputSystem(this);
     this.objects = new LevelLoader(this).load(this.level);
-    this.growthBuds = this.physics.add.group({ allowGravity: true, immovable: false });
+    this.growthBuds = this.physics.add.group({
+      allowGravity: true,
+      immovable: false,
+    });
     this.player = new Player(this, this.level.start.x, this.level.start.y);
     this.player.resetForNewRun();
 
     this.setupPhysics();
     this.setupPlayerEvents();
-    this.input.on('pointerdown', this.handlePointerPause, this);
 
     this.cameraSystem = new CameraSystem(this, this.level);
     this.cameraSystem.follow(this.player);
 
-    if (this.scene.isActive('HudScene')) {
-      this.scene.stop('HudScene');
+    if (this.scene.isActive("HudScene")) {
+      this.scene.stop("HudScene");
     }
-    this.scene.launch('HudScene');
-    if (this.testPlay) {
-      this.createTestPlayHud();
-    }
+    this.scene.launch("HudScene");
+    const bridge = getGameBridge(this.game);
+    const unbindCommands = bridge?.bindCommands(this.handleUiCommand);
+    bridge?.patch({
+      state: "playing",
+      result: null,
+      levelId: this.level.id,
+      testPlay: this.testPlay,
+    });
+    window.__SKY_SPROUT_RUN = {
+      levelId: this.level.id,
+      testPlay: this.testPlay,
+    };
     this.emitHud(true);
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.input.off('pointerdown', this.handlePointerPause, this);
+      unbindCommands?.();
       this.events.off(Phaser.Scenes.Events.RESUME, this.handleResume, this);
       this.inputSystem.destroy();
+      this.cameraSystem.destroy();
     });
     this.events.on(Phaser.Scenes.Events.RESUME, this.handleResume, this);
   }
@@ -115,6 +141,8 @@ export class LevelScene extends Phaser.Scene {
     if (this.resolved) {
       return;
     }
+
+    this.elapsedMs += delta;
 
     const input = this.inputSystem.read();
 
@@ -143,10 +171,13 @@ export class LevelScene extends Phaser.Scene {
 
   restartCurrentCheckpoint(): void {
     this.player.respawn();
-    this.cameras.main.flash(120, 255, 255, 255, false);
+    this.inputSystem.clear();
+    if (!prefersReducedMotion())
+      this.cameras.main.flash(120, 255, 255, 255, false);
   }
 
   private drawBackground(): void {
+    if (drawWorldArt(this, this.level)) return;
     const graphics = this.add.graphics().setDepth(DEPTHS.background);
     graphics.fillGradientStyle(0x7dd6ff, 0x7dd6ff, 0xc2f4ff, 0xc2f4ff, 1);
     graphics.fillRect(0, 0, this.level.world.width, this.level.world.height);
@@ -169,89 +200,109 @@ export class LevelScene extends Phaser.Scene {
       this.objects.terrain,
       this.handleTerrainCollision,
       undefined,
-      this
+      this,
     );
     this.physics.add.collider(this.player, this.objects.movingPlatforms);
     this.physics.add.collider(this.growthBuds, this.objects.terrain);
     this.physics.add.collider(this.growthBuds, this.objects.movingPlatforms);
     this.physics.add.collider(this.objects.enemies, this.objects.terrain);
-    this.physics.add.collider(this.objects.enemies, this.objects.movingPlatforms);
+    this.physics.add.collider(
+      this.objects.enemies,
+      this.objects.movingPlatforms,
+    );
 
     this.physics.add.overlap(
       this.player,
       this.objects.collectibles,
       this.handleCollectible,
       undefined,
-      this
+      this,
     );
     this.physics.add.overlap(
       this.player,
       this.objects.powerUps,
       this.handlePowerUp,
       undefined,
-      this
+      this,
     );
     this.physics.add.overlap(
       this.player,
       this.growthBuds,
       this.handleGrowthBud,
       undefined,
-      this
+      this,
     );
     this.physics.add.overlap(
       this.player,
       this.objects.enemies,
       this.handleEnemy,
       undefined,
-      this
+      this,
     );
     this.physics.add.overlap(
       this.player,
       this.objects.hazards,
       this.handleHazard,
       undefined,
-      this
+      this,
     );
     this.physics.add.overlap(
       this.player,
       this.objects.checkpoints,
       this.handleCheckpoint,
       undefined,
-      this
+      this,
     );
     this.physics.add.overlap(
       this.player,
       this.objects.finishGate,
       this.handleFinish,
       undefined,
-      this
+      this,
     );
   }
 
   private setupPlayerEvents(): void {
-    this.events.on('player:jump', this.handlePlayerJump, this);
+    this.events.on("player:jump", this.handlePlayerJump, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.events.off('player:jump', this.handlePlayerJump, this);
+      this.events.off("player:jump", this.handlePlayerJump, this);
     });
   }
 
   private handlePlayerJump(x: number, y: number): void {
-    this.audio.play('jump');
+    this.audio.play("jump");
     this.particles.jumpDust(x, y);
   }
 
-  private handlePointerPause(pointer: Phaser.Input.Pointer): void {
-    if (this.resolved || pointer.x < this.scale.width - 140 || pointer.y > 96) {
-      return;
-    }
-
-    if (this.testPlay) {
+  private readonly handleUiCommand = (command: UiCommand): void => {
+    if (command === "return-editor" && this.testPlay) {
       this.returnToEditor();
       return;
     }
-
-    this.pauseGame();
-  }
+    if (command === "home") {
+      this.inputSystem.clear();
+      publishGameState("title");
+      getGameBridge(this.game)?.onExit?.("home");
+      return;
+    }
+    if (command === "pause" && !this.resolved && this.scene.isActive())
+      this.pauseGame();
+    if (command === "resume" && !this.resolved && this.scene.isPaused()) {
+      this.inputSystem.clear();
+      this.scene.stop("PauseScene");
+      this.scene.resume();
+      publishGameState("playing");
+      getGameBridge(this.game)?.patch({ state: "playing" });
+    }
+    if (command === "restart") {
+      this.inputSystem.clear();
+      this.scene.stop("PauseScene");
+      this.scene.stop("GameOverScene");
+      this.scene.stop("LevelCompleteScene");
+      this.scene.stop("HudScene");
+      this.scene.restart({ level: this.level, testPlay: this.testPlay });
+    }
+  };
 
   private handleResume(): void {
     this.ignorePauseUntil = this.time.now + 180;
@@ -281,11 +332,16 @@ export class LevelScene extends Phaser.Scene {
     }
   }
 
-  private resolveCrouchInput(input: ReturnType<InputSystem['read']>): ReturnType<InputSystem['read']> {
+  private resolveCrouchInput(
+    input: ReturnType<InputSystem["read"]>,
+  ): ReturnType<InputSystem["read"]> {
     if (
       input.down ||
       !this.player.isCrouching() ||
-      this.player.hasRoomToStand([this.objects.terrain, this.objects.movingPlatforms])
+      this.player.hasRoomToStand([
+        this.objects.terrain,
+        this.objects.movingPlatforms,
+      ])
     ) {
       return input;
     }
@@ -293,24 +349,36 @@ export class LevelScene extends Phaser.Scene {
     return { ...input, down: true };
   }
 
-  private handleCollectible(_playerObject: ArcadeObject, collectibleObject: ArcadeObject): void {
-    if (!(collectibleObject instanceof Collectible) || !collectibleObject.active) {
+  private handleCollectible(
+    _playerObject: ArcadeObject,
+    collectibleObject: ArcadeObject,
+  ): void {
+    if (
+      !(collectibleObject instanceof Collectible) ||
+      !collectibleObject.active
+    ) {
       return;
     }
 
     collectibleObject.collect();
     this.scoreSystem.addShard();
-    this.audio.play('collect');
+    this.audio.play("collect");
     this.particles.collectSpark(collectibleObject.x, collectibleObject.y);
     this.emitHud(true);
   }
 
-  private handleTerrainCollision(_playerObject: ArcadeObject, terrainObject: ArcadeObject): void {
+  private handleTerrainCollision(
+    _playerObject: ArcadeObject,
+    terrainObject: ArcadeObject,
+  ): void {
     if (!(terrainObject instanceof Phaser.GameObjects.Image)) {
       return;
     }
 
-    if (terrainObject.getData('terrainKind') !== 'runeBox' || terrainObject.getData('spent')) {
+    if (
+      terrainObject.getData("terrainKind") !== "runeBox" ||
+      terrainObject.getData("spent")
+    ) {
       return;
     }
 
@@ -325,17 +393,17 @@ export class LevelScene extends Phaser.Scene {
       return;
     }
 
-    terrainObject.setData('spent', true);
-    terrainObject.setTexture('terrain-rune-box-used');
-    this.audio.play('power');
+    terrainObject.setData("spent", true);
+    terrainObject.setTexture("terrain-rune-box-used");
+    this.audio.play("power");
     this.tweens.add({
       targets: terrainObject,
       y: terrainObject.y - 8,
       duration: 70,
       yoyo: true,
-      ease: 'Sine.easeOut',
+      ease: "Sine.easeOut",
       onUpdate: () => this.updateStaticBlockBody(terrainObject),
-      onComplete: () => this.updateStaticBlockBody(terrainObject)
+      onComplete: () => this.updateStaticBlockBody(terrainObject),
     });
     this.spawnGrowthBud(terrainObject.x, terrainObject.y - 6);
   }
@@ -352,7 +420,10 @@ export class LevelScene extends Phaser.Scene {
     this.particles.collectSpark(x, y - 24);
   }
 
-  private handlePowerUp(_playerObject: ArcadeObject, powerObject: ArcadeObject): void {
+  private handlePowerUp(
+    _playerObject: ArcadeObject,
+    powerObject: ArcadeObject,
+  ): void {
     if (!(powerObject instanceof PowerUp) || !powerObject.active) {
       return;
     }
@@ -360,12 +431,15 @@ export class LevelScene extends Phaser.Scene {
     powerObject.collect();
     this.player.applyBreeze(powerObject.durationMs, this.time.now);
     this.scoreSystem.addPowerUp();
-    this.audio.play('power');
+    this.audio.play("power");
     this.particles.collectSpark(powerObject.x, powerObject.y);
     this.emitHud(true);
   }
 
-  private handleGrowthBud(_playerObject: ArcadeObject, budObject: ArcadeObject): void {
+  private handleGrowthBud(
+    _playerObject: ArcadeObject,
+    budObject: ArcadeObject,
+  ): void {
     if (!(budObject instanceof GrowthBud) || !budObject.active) {
       return;
     }
@@ -373,12 +447,15 @@ export class LevelScene extends Phaser.Scene {
     budObject.collect();
     this.player.grow();
     this.scoreSystem.addPowerUp();
-    this.audio.play('power');
+    this.audio.play("power");
     this.particles.collectSpark(this.player.x, this.player.y - 24);
     this.emitHud(true);
   }
 
-  private handleEnemy(_playerObject: ArcadeObject, enemyObject: ArcadeObject): void {
+  private handleEnemy(
+    _playerObject: ArcadeObject,
+    enemyObject: ArcadeObject,
+  ): void {
     if (!(enemyObject instanceof BaseEnemy) || enemyObject.isDefeated()) {
       return;
     }
@@ -387,7 +464,7 @@ export class LevelScene extends Phaser.Scene {
       enemyObject.defeat();
       this.player.bounce();
       this.scoreSystem.addEnemyDefeat();
-      this.audio.play('enemy');
+      this.audio.play("enemy");
       this.particles.enemyBurst(enemyObject.x, enemyObject.y);
       this.emitHud(true);
       return;
@@ -396,7 +473,10 @@ export class LevelScene extends Phaser.Scene {
     this.damagePlayer(enemyObject.x);
   }
 
-  private handleHazard(_playerObject: ArcadeObject, hazardObject: ArcadeObject): void {
+  private handleHazard(
+    _playerObject: ArcadeObject,
+    hazardObject: ArcadeObject,
+  ): void {
     if (!(hazardObject instanceof Hazard)) {
       return;
     }
@@ -404,20 +484,29 @@ export class LevelScene extends Phaser.Scene {
     this.damagePlayer(hazardObject.x);
   }
 
-  private handleCheckpoint(_playerObject: ArcadeObject, checkpointObject: ArcadeObject): void {
+  private handleCheckpoint(
+    _playerObject: ArcadeObject,
+    checkpointObject: ArcadeObject,
+  ): void {
     if (!(checkpointObject instanceof Checkpoint)) {
       return;
     }
 
     if (checkpointObject.activate()) {
-      this.player.setCheckpoint({ x: checkpointObject.x + 26, y: checkpointObject.y - 48 }, checkpointObject.label);
-      this.audio.play('checkpoint');
+      this.player.setCheckpoint(
+        { x: checkpointObject.x + 26, y: checkpointObject.y - 48 },
+        checkpointObject.label,
+      );
+      this.audio.play("checkpoint");
       this.particles.collectSpark(checkpointObject.x, checkpointObject.y - 12);
       this.emitHud(true);
     }
   }
 
-  private handleFinish(_playerObject: ArcadeObject, finishObject: ArcadeObject): void {
+  private handleFinish(
+    _playerObject: ArcadeObject,
+    finishObject: ArcadeObject,
+  ): void {
     if (!(finishObject instanceof FinishGate)) {
       return;
     }
@@ -432,8 +521,9 @@ export class LevelScene extends Phaser.Scene {
       return;
     }
 
-    this.audio.play('hit');
-    this.cameras.main.shake(110, 0.003);
+    this.audio.play("hit");
+    if (!prefersReducedMotion()) this.cameras.main.shake(110, 0.002);
+    this.particles.hurt(this.player.x, this.player.y);
     this.emitHud(true);
 
     if (this.player.health <= 0) {
@@ -447,7 +537,7 @@ export class LevelScene extends Phaser.Scene {
     }
 
     if (this.player.loseLifeForFall(time)) {
-      this.audio.play('hit');
+      this.audio.play("hit");
       this.restartCurrentCheckpoint();
       this.emitHud(true);
       return;
@@ -461,7 +551,7 @@ export class LevelScene extends Phaser.Scene {
     const onGround = body.blocked.down || body.touching.down;
 
     if (onGround && !this.wasOnGround) {
-      this.audio.play('land');
+      this.audio.play("land");
       this.particles.landDust(this.player.x, this.player.y);
     }
 
@@ -469,52 +559,19 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private pauseGame(): void {
-    this.inputSystem.clearPausePress();
-    this.scene.launch('PauseScene', { levelNumber: this.levelNumber });
+    this.inputSystem.clear();
+    getGameBridge(this.game)?.patch({ state: "paused" });
+    this.scene.launch("PauseScene");
     this.scene.pause();
   }
 
-  private createTestPlayHud(): void {
-    this.add
-      .text(480, 18, 'Test Play', {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '20px',
-        color: '#102c31',
-        stroke: '#ffffff',
-        strokeThickness: 4
-      })
-      .setOrigin(0.5, 0)
-      .setScrollFactor(0)
-      .setDepth(DEPTHS.ui);
-
-    const button = this.add
-      .rectangle(820, 38, 180, 44, 0xf4fff7, 0.94)
-      .setStrokeStyle(2, 0x52b6c7, 1)
-      .setScrollFactor(0)
-      .setDepth(DEPTHS.ui)
-      .setInteractive({ useHandCursor: true });
-    this.add
-      .text(820, 38, 'Return to Editor', {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '18px',
-        color: '#123237'
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(DEPTHS.ui + 1)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.returnToEditor());
-    button.on('pointerdown', () => this.returnToEditor());
-  }
-
   private returnToEditor(): void {
-    if (this.resolved) {
-      return;
-    }
-
     this.resolved = true;
-    this.scene.stop('HudScene');
-    window.dispatchEvent(new CustomEvent('sky-sprout:return-editor'));
+    this.inputSystem.clear();
+    this.scene.stop("HudScene");
+    const bridge = getGameBridge(this.game);
+    if (bridge) bridge.onExit?.("editor");
+    else window.dispatchEvent(new CustomEvent("sky-sprout:return-editor"));
   }
 
   private showGameOver(): void {
@@ -523,11 +580,13 @@ export class LevelScene extends Phaser.Scene {
     }
 
     this.resolved = true;
-    publishGameState('gameOver');
-    this.scene.launch('GameOverScene', {
+    this.inputSystem.clear();
+    this.emitHud(true);
+    getGameBridge(this.game)?.patch({ state: "gameOver" });
+    publishGameState("gameOver");
+    this.scene.launch("GameOverScene", {
       score: this.scoreSystem.getScore(),
       bestScore: this.scoreSystem.getBestScore(),
-      levelNumber: this.levelNumber
     });
     this.scene.pause();
   }
@@ -538,30 +597,35 @@ export class LevelScene extends Phaser.Scene {
     }
 
     this.resolved = true;
-    const elapsedSeconds = secondsFromMs(this.time.now - this.startedAt);
-    this.scoreSystem.addClearBonus(this.level.world.timeLimitSeconds, elapsedSeconds);
+    this.inputSystem.clear();
+    const elapsedSeconds = secondsFromMs(this.elapsedMs);
+    this.scoreSystem.addClearBonus(
+      this.level.world.timeLimitSeconds,
+      elapsedSeconds,
+    );
     const bestScore = this.scoreSystem.commitBestScore();
-    this.audio.play('clear');
-    this.cameras.main.shake(160, 0.002);
-    publishGameState('levelComplete');
+    this.audio.play("clear");
+    if (!prefersReducedMotion()) this.cameras.main.shake(160, 0.0015);
+    publishGameState("levelComplete");
     this.emitHud(true);
     window.dispatchEvent(
-      new CustomEvent('sky-sprout:level-complete', {
+      new CustomEvent("sky-sprout:level-complete", {
         detail: {
           levelId: this.level.id,
           score: this.scoreSystem.getScore(),
-          elapsedSeconds
-        }
-      })
+          elapsedSeconds,
+        },
+      }),
     );
-    this.scene.launch('LevelCompleteScene', {
+    const result = {
       score: this.scoreSystem.getScore(),
       shards: this.scoreSystem.getShards(),
       totalShards: this.level.collectibles.length,
       elapsedSeconds,
       bestScore,
-      levelNumber: this.levelNumber
-    });
+    };
+    getGameBridge(this.game)?.patch({ state: "levelComplete", result });
+    this.scene.launch("LevelCompleteScene", result);
     this.scene.pause();
   }
 
@@ -576,10 +640,10 @@ export class LevelScene extends Phaser.Scene {
       shards: this.scoreSystem.getShards(),
       totalShards: this.level.collectibles.length,
       score: this.scoreSystem.getScore(),
-      elapsedSeconds: secondsFromMs(this.time.now - this.startedAt),
+      elapsedSeconds: secondsFromMs(this.elapsedMs),
       checkpointLabel: this.player.getCheckpointLabel(),
       powerActive: this.player.hasBreeze(this.time.now),
-      highScore: this.scoreSystem.getBestScore()
+      highScore: this.scoreSystem.getBestScore(),
     };
 
     this.game.events.emit(EVENTS.hudUpdate, payload);

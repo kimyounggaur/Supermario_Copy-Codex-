@@ -1,136 +1,115 @@
 # Sky Sprout Runner
 
-Sky Sprout Runner is an original browser platform game built with Vite, React, TypeScript, and Phaser 3. The playable demo follows Sprout, a small seedling spirit, across a cloud-island stage to gather Light Seed Shards and reach the Wind Gate.
+작은 새싹 Sprout가 구름섬을 건너 빛의 씨앗을 모으고 바람문에 도착하는 오리지널 웹 플랫폼 게임입니다. Vite · React · TypeScript · Phaser 3로 구성한 정적 클라이언트 앱이며 서버·계정·DB가 필요하지 않습니다.
 
-## Creative Principles
+## 실행
 
-This project uses original names, level layouts, code-generated placeholder art, and WebAudio sound effects. It does not use external images, music, fonts, or copyrighted game assets.
-
-## Install
-
-```bash
+```powershell
 npm install
-```
-
-## Run
-
-```bash
 npm run dev
 ```
 
-Open the local URL printed by Vite. The app is a static client-side game and does not need a server or database after build.
+터미널에 표시되는 로컬 주소를 여세요. 배포용 파일은 `npm run build`로 `dist`에 생성합니다. Vite의 상대 base 경로를 유지하며, 아트 URL도 이 경로를 따릅니다.
 
-## Test
+## 화면과 사용 흐름
 
-```bash
-npm run build
-npm run test
-npm run test:e2e
+- **모험 시작:** 기존 이야기 레벨을 시작합니다.
+- **레벨 만들기:** Sky Forge Editor에서 새 섬을 만듭니다.
+- **내 레벨:** 저장한 레벨을 플레이·편집·복제·가져오기·내보내기·삭제합니다.
+- **설정:** 효과음, 움직임 줄이기, 플레이 중 조작 안내를 조절합니다. OS의 모션 감소 설정도 존중합니다.
+- **플레이:** 상단에 체력·씨앗·일시정지, 아래 양쪽에 이동·달리기·점프 버튼을 표시합니다. 작은 화면에서 점수·시간·최고 기록은 일시정지 상세에서 확인합니다.
+- **재시작:** 일시정지·실패·클리어에서 같은 이야기/사용자 레벨을 처음부터 다시 실행합니다. ‘홈으로’는 제작·내 레벨을 선택할 수 있는 React 홈으로 돌아갑니다.
+- **테스트 플레이:** 편집 중인 레벨의 복사본을 실행하고 에디터로 돌아옵니다. 편집 데이터·선택·도구·카메라·undo/redo를 유지합니다.
+
+## 조작
+
+| 행동              | 키보드 / 터치                       |
+| ----------------- | ----------------------------------- |
+| 이동              | ← / → 또는 A / D, 왼쪽 하단 버튼    |
+| 점프              | Space / W / ↑, 오른쪽 점프 버튼     |
+| 달리기            | Shift, 점프 옆 달리기 버튼          |
+| 웅크리기          | ↓                                   |
+| 일시정지·재개     | P / Esc, 우상단 일시정지 버튼       |
+| 체크포인트로 복귀 | R                                   |
+| 테스트 종료       | 테스트 중 P / Esc 또는 ‘에디터로’   |
+| 벽타기·벽점프     | 떨어지며 벽 방향으로 이동한 뒤 점프 |
+| 2단 점프          | 공중에서 점프를 한 번 더 누르기     |
+
+이동·달리기·점프는 여러 손가락으로 동시에 사용할 수 있습니다. 손가락 취소·창 전환·일시정지 시 입력을 해제합니다. 모달과 텍스트 입력 중에는 게임/에디터 단축키를 실행하지 않습니다.
+
+`R`은 현재 체크포인트로 이동하는 기존 동작입니다. 결과 화면의 재도전은 같은 레벨의 새로운 시도를 시작합니다.
+
+## Sky Forge Editor
+
+- 지형·발판·아이템·적·위험·주요 지점·장식 팔레트와 이름 검색.
+- 선택, 배치, 지우기, 영역 배치, 화면 이동, 경로 도구.
+- 객체 위치·크기·메모·속도·순찰·이동 발판 경로, 다중 선택·정렬·분배.
+- 레이어 표시/숨김·잠금·활성화, 미니맵으로 카메라 이동.
+- 섬 설정과 기존 템플릿, 난이도 추정, 검증 결과와 실제 위치 이동.
+- Ctrl/Cmd+Z, Ctrl/Cmd+Y 또는 툴바로 되돌리기·다시 실행.
+- 넓은 화면은 팔레트·캔버스·검사 패널을 나란히 표시합니다. 중간 화면은 상세 패널 하나를 열고, 세로 모바일은 아래 패널에서 팔레트·속성·레이어·검증을 전환합니다.
+- 화면 이동/배율 도구는 캔버스를 유지한 채 사용할 수 있습니다. 객체에 따라 일부 세부 속성은 패널 안을 스크롤해 확인합니다.
+
+저장 상태는 미저장·저장 중·저장 완료·임시 보관·저장 실패로 구별합니다. 저장 공간 부족/제한 시 성공으로 표시하지 않고 JSON 내보내기로 작업을 보관할 수 있습니다. 변경 후 약 2초, 지속 편집 중 최대 약 10초 간격으로 임시 보관을 시도합니다. 새로 열 때 복구 가능한 임시 작업은 사용자 선택으로 복구합니다.
+
+JSON은 기존 schemaVersion과 object type/id를 유지합니다. 잘못된 형식은 적용 전에 거부합니다. 기존 스키마 일부 항목(oneWay/falling/gustVent 등)은 게임 실행 시 기존 어댑터가 단순화합니다. 이번 UI 변경에서 해당 물리를 확장하지 않았습니다.
+
+## 아트와 접근성
+
+`Sky-Sprout/Sky-Sprout-Art-Pack-v1`의 제공 아트 35개(PNG 19, SVG 16)를 `public/art/sky-sprout-v1`에서 사용합니다. 생성 원본·과거 비교 화면·프리뷰 앱은 런타임에 포함하지 않습니다. 외부 폰트·음악·이미지 서비스를 추가하지 않았으며 기존 WebAudio 생성 효과음을 사용합니다.
+
+- Sprout·아이템·지형은 원래 물리 객체와 분리한 표시용 이미지입니다. 새 PNG의 투명 여백을 충돌 영역으로 쓰지 않습니다.
+- 플레이어 32×44 물리 프레임, 기본 22×34와 웅크림 24×20 바디, 성장 배율과 발 위치를 유지합니다.
+- 기존 960×540 설계 구도와 물리 단위를 유지합니다. 데스크톱은 16:9 구도, 세로 모바일은 별도 카메라 zoom·시야와 CSS 픽셀 HUD를 사용합니다. 카메라 아래 여유 공간은 물리 경계·낙사선을 바꾸지 않습니다.
+- 두 포즈 달리기는 연구용 키포즈입니다. 벽타기·웅크림, PuffHopper·WindWisp·Wind Gate, stone 및 사용 완료 룬 등 미제공 상태는 기존 생성 그래픽을 유지합니다.
+- 배경과 발판은 seamless 타일셋이 아닙니다. 배경은 유한 cover/crop, 긴 풀 지형은 별도 표현으로 처리합니다.
+- 이미지 로딩에 실패하면 기본 그래픽으로 진행하고 다시 불러올 수 있습니다.
+- 모달은 키보드 포커스 제한·Esc 닫기·포커스 복귀를 제공합니다. 터치 버튼은 최소 44 CSS px, 버튼 간격은 최소 6px를 목표로 구성했습니다.
+- 반복 장식·화면 흔들림은 OS/앱 모션 감소 설정에 맞춰 줄입니다.
+
+## 저장 데이터
+
+| 키                                               | 용도                              |
+| ------------------------------------------------ | --------------------------------- |
+| `sky-sprout-runner.best-score`                   | 전체 최고 점수                    |
+| `sky-sprout-runner:custom-levels:index`          | 사용자 레벨 목록                  |
+| `sky-sprout-runner:custom-levels:<id>`           | 레벨 원본                         |
+| `sky-sprout-runner:custom-levels:<id>:record`    | 레벨별 최고 기록                  |
+| `sky-sprout-runner:custom-levels:<id>:thumbnail` | 기존 작은 미리보기 표시자         |
+| `sky-sprout-runner:editor:draft:<id>`            | 임시 작업                         |
+| `sky-sprout-runner:editor:last-opened`           | 마지막 작업 ID                    |
+| `sky-sprout-runner:editor:recovery:index:*`      | 복구를 위해 보존한 손상 목록 원본 |
+| `sky-sprout-runner:ui-preferences:v1`            | 새 UI 설정                        |
+
+사용자 레벨·기록은 브라우저별 localStorage에 저장됩니다. 다른 브라우저로 옮기려면 JSON으로 내보내세요. 원본을 임의 초기화하지 않으며, 썸네일 표시자가 이미지 URL이 아니면 제공 Sprout 미리보기로 대체합니다.
+
+## 구현 구조
+
+- `src/App.tsx`: 홈/플레이/에디터/내 레벨, 테스트 복귀와 완료 기록.
+- `src/components/GameCanvas.tsx`: Phaser 인스턴스 수명, DOM HUD·터치·일시정지·결과.
+- `src/ui`: 디자인 토큰·공통 모달·홈·설정·인스턴스별 브리지·터치 상태.
+- `src/game/render`: 아트 카탈로그·물리와 분리한 캐릭터/객체/배경 뷰.
+- `src/game/scenes`: 로딩·게임 상태와 실제 플레이·완료/실패.
+- `src/game/systems`: 입력·카메라·충돌·점수·저장·오디오·피드백.
+- `src/game/data/levels/level1.ts`: 기존 이야기 레벨.
+- `src/editor`: 캔버스·DOM 패널·command stack·직렬화·저장·검증.
+
+`window.__SKY_SPROUT_STATE`, `window.__SKY_SPROUT_HUD`, `sky-sprout-state`, `sky-sprout:level-complete`, `sky-sprout:return-editor`의 기존 관찰 계약을 유지합니다. `__SKY_SPROUT_RUN`은 현재 레벨 ID와 테스트 여부를 관찰하는 값입니다.
+
+## 검증
+
+```powershell
 npm run lint
-```
-
-The E2E smoke test starts the Vite dev server, opens the game in Chromium, clicks Start, checks HUD state, and pauses through the touch pause button.
-
-## Controls
-
-- Left: Arrow Left or A
-- Right: Arrow Right or D
-- Jump: Space, W, or Arrow Up
-- Run: Shift
-- Pause: P, Escape, or the top-right touch button
-- Restart at checkpoint: R
-- Mobile: left/right buttons bottom-left, jump and run buttons bottom-right
-- Wall cling: hold toward a wall while falling to slide slowly, then jump to kick away
-- Double jump: press jump once more while airborne
-
-## Screen Layout
-
-The first screen is the game menu with the title, Sprout, and a Start button. During play, the HUD sits along the top edge with health, seed count, score, time, checkpoint, and Breeze Orb status. Touch controls are anchored to the bottom corners and the pause button is placed in the top-right corner so it does not cover the HUD.
-
-## Architecture
-
-- `src/components/GameCanvas.tsx` mounts and destroys the Phaser game instance from React.
-- `src/game/scenes` contains Boot, Menu, Level, HUD, Pause, Game Over, and Clear scenes.
-- `src/game/entities` contains Player, enemies, pickups, hazards, checkpoints, platforms, and the finish gate.
-- `src/game/systems` contains input, touch controls, scoring, saving, audio, camera, collision, particles, and level loading.
-- `src/game/data/levels/level1.ts` is the editable data-driven stage definition.
-- `tests/unit` covers pure player physics, scoring, saving, level validation, editor command stacks, schema migration, advanced editor tools, and local persistence guards.
-- `tests/e2e` contains the Playwright browser smoke test.
-
-## Game Systems
-
-Player movement uses acceleration, separate walk/run speed caps, ground and air drag, coyote time, jump buffering, variable jump height, wall cling, wall jump, one double jump, stronger falling gravity, knockback, and invulnerability after damage. Enemies can be stomped from above or damage the player from the side. Falling below the stage returns Sprout to the latest checkpoint while health remains available.
-
-Rune boxes release a Growth Bud when hit from below. Collecting a Growth Bud doubles Sprout's height. The score system awards points for Light Seed Shards, defeated enemies, Breeze Orb or Growth Bud collection, and fast level clears. Best score is stored in `localStorage` under the `sky-sprout-runner.best-score` key.
-
-## Editing The Level
-
-Story content can still be edited in `src/game/data/levels/level1.ts`, but custom stages can now be made in the browser with **Sky Forge Editor**.
-
-Open the app, choose **Create Level**, and use the palette to place original Sky Sprout Runner objects on the grid. Choose **My Levels** to reopen, play, duplicate, export, import, or delete saved custom levels.
-
-### Sky Forge Editor
-
-- **Palette:** Terrain, Platforms, Items, Enemies, Hazards, Utilities, and Decorations.
-- **Layers:** show, hide, lock, unlock, and set the active layer for Terrain, Platforms, Items, Enemies, Hazards, Utilities, and Decorations.
-- **Placement:** choose an object, then click the Phaser editor canvas.
-- **Selection:** use Select mode, then click an object. Drag selected objects to move them.
-- **Properties:** edit position, size, visibility, lock state, notes, speed, moving-platform paths, and patrol-style values from the right panel.
-- **Path Tool:** select a Moving Breeze Platform, switch to Path mode, and click the canvas to add waypoints. The path preview line shows loop or ping-pong routing, and waypoint coordinates can be edited in the inspector.
-- **Multi-select Inspector:** select multiple objects with Shift-click, then apply common visible/locked changes, align edges, distribute spacing, duplicate, delete, or drag as a group.
-- **Mini Map:** the lower-right preview shows the full level, visible objects, and the current viewport. Click it to jump the editor camera.
-- **Templates:** Level Settings can replace the current level with Empty Island, Starter Plains, Floating Challenge, Enemy Practice, or Speed Run Strip.
-- **Difficulty Estimator:** the side panel estimates easy, normal, hard, or experimental from enemy count, hazard count, jump gaps, checkpoint spacing, and level length.
-- **Undo/Redo:** toolbar buttons or `Ctrl/Cmd+Z` and `Ctrl/Cmd+Y`.
-- **Save/Load:** levels, compact generated thumbnails, and best custom-level play records are saved to `localStorage` under `sky-sprout-runner:custom-levels:*`.
-- **Import/Export:** JSON files use the Sky Forge schema and include `schemaVersion`.
-- **Test Play:** the editor deep-clones the current level and starts `LevelScene`; press `Escape` to return with the editor state still open.
-- **Validation:** the panel reports missing spawn/finish, duplicate ids, out-of-bounds objects, weak moving-platform paths, hazards near spawn, and summary info.
-- **Mobile:** the palette collapses into a lower drawer, with floating Copy/Delete/Save/Test actions.
-
-Keyboard shortcuts: `V` Select, `B` Brush, `E` Erase, `R` Rectangle, `H` Pan, `P` Path, `T` Test, `G` Grid, `S` Snap, `Delete` remove, `Ctrl/Cmd+S` save, `Ctrl/Cmd+D` duplicate.
-
-The editor follows the project creative rules: no external images, sounds, fonts, or famous platform-game assets. All editor objects use cloud-island, wind, sprout, and light-seed names and generated rendering.
-
-### LevelData Schema
-
-Custom levels use plain JSON data in `src/game/data/LevelData.ts`:
-
-- `world`: tile size, dimensions, theme, and background variant
-- `playerSpawn` and `finishGate`: one each for playable levels
-- `terrain`, `platforms`, `collectibles`, `powerUps`, `enemies`, `hazards`, `checkpoints`, `decorations`
-- `metadata`: difficulty, tags, and estimated time
-
-The runtime adapter converts this schema to the existing `LevelLoader` format so story levels and custom levels use the same play scene. To add a new custom object, add its type in `LevelData.ts`, add a palette entry in `src/editor/data/objectCatalog.ts`, render it in `EditorScene`, and map it in `toRuntimeLevelData` if it should affect gameplay.
-
-`localStorage` is browser-local, size-limited, and not shared across devices. Export JSON before clearing browser data or moving levels between browsers.
-
-### Story Level Source
-
-The built-in stage is made from plain TypeScript data:
-
-- `terrain`: solid rectangles, including grass, stone, cloud, sky brick, and rune box blocks
-- `movingPlatforms`: platform rectangles with `from`, `to`, and `speed`
-- `collectibles`: Light Seed Shards
-- `powerUps`: Breeze Orbs with duration
-- `enemies`: Drift Bug, Puff Hopper, and Wind Wisp definitions
-- `hazards`: Thorn Crystal rectangles
-- `checkpoints`: Glow Lantern positions
-- `finishGate`: Wind Gate position
-
-Run `npm run test` after editing level data. The validation test checks for unique ids and basic stage route requirements.
-
-## Build And Deploy
-
-```bash
+npm run test
 npm run build
+npm run test:e2e
 ```
 
-Deploy the generated `dist` folder to any static hosting provider. No environment variables are required.
+E2E는 production build의 `dist`를 자체 서버(127.0.0.1:4173)로 제공해 Chromium에서 실행합니다. 같은 포트의 별도 서버를 띄우지 마세요. `npm run test:e2e`가 build도 수행합니다. 린트는 런타임·테스트 소스를 대상으로 하며 보관된 아트 팩의 독립 프리뷰는 제외합니다.
 
-## Future Improvements
+검증 범위에는 실제 사용자 레벨 골인·낙사·재시작, 완료 기록, 일시정지 시간, 저장 실패·가져오기·undo/redo, 설정·포커스, 모바일 다중 터치·반응형이 포함됩니다. Chromium emulation은 실물 iOS Safari 확인을 대신하지 않습니다.
 
-- Add more stages and biome-specific hazards.
-- Replace placeholder generated textures with a larger original art pass.
-- Add settings for sound volume and input remapping.
-- Add a collectible route timer and optional challenge medals.
+- 감사 기록: `docs/uiux-refactor-audit.md`
+- 최종 적용/검증/제한: `docs/uiux-refactor-report.md`
+- before/after 화면과 브라우저 검수: `output/playwright/`
+- 실행 명세 원문: `Sky-Sprout_UIUX_리팩토링_바이브코딩_프롬프트.ko.md`

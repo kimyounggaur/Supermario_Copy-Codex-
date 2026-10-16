@@ -4,6 +4,8 @@ export default defineConfig({
   testDir: './tests/e2e',
   globalSetup: './tests/e2e/global-setup.ts',
   fullyParallel: true,
+  // Each case runs a Phaser canvas; cap local parallelism to keep frame timing reliable.
+  workers: process.env.CI ? 2 : 4,
   retries: process.env.CI ? 2 : 0,
   reporter: 'list',
   use: {

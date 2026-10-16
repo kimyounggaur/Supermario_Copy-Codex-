@@ -5,6 +5,8 @@ dist
 coverage
 playwright-report
 test-results
+output
+Sky-Sprout
 *.tsbuildinfo
 node_modules/.tmp
 01 Source/
@@ -12,3 +14,4 @@ node_modules/.tmp
 *.log
 .DS_Store
 Thumbs.db
+supermario_style_uiux_upgrade_vibecoding_prompt.md

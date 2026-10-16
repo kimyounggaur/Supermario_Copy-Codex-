@@ -1,26 +1,27 @@
-import type { LevelObject } from '../../game/data/LevelData';
-import type { EditorState } from '../schemas/levelDefaults';
-import { addLevelObject, removeLevelObjects } from '../utils/levelObjects';
-import type { EditorCommand } from './EditorCommand';
+import type { LevelObject } from "../../game/data/LevelData";
+import type { EditorState } from "../schemas/levelDefaults";
+import { addLevelObject, removeLevelObjects } from "../utils/levelObjects";
+import type { EditorCommand } from "./EditorCommand";
 
 export class BulkPaintCommand implements EditorCommand {
   readonly id: string;
-  readonly label = 'Bulk paint';
+  readonly label = "Bulk paint";
 
   constructor(private readonly objects: LevelObject[]) {
-    this.id = `bulk-paint-${objects.map((object) => object.id).join('-')}`;
+    this.id = `bulk-paint-${objects.map((object) => object.id).join("-")}`;
   }
 
   do(state: EditorState): EditorState {
     const level = this.objects.reduce(
-      (current, object) => addLevelObject(removeLevelObjects(current, [object.id]), object),
-      state.level
+      (current, object) =>
+        addLevelObject(removeLevelObjects(current, [object.id]), object),
+      state.level,
     );
 
     return {
       ...state,
       level,
-      selectedIds: this.objects.map((object) => object.id)
+      selectedIds: this.objects.map((object) => object.id),
     };
   }
 
@@ -29,9 +30,9 @@ export class BulkPaintCommand implements EditorCommand {
       ...state,
       level: removeLevelObjects(
         state.level,
-        this.objects.map((object) => object.id)
+        this.objects.map((object) => object.id),
       ),
-      selectedIds: []
+      selectedIds: [],
     };
   }
 }

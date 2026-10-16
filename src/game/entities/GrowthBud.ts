@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { DEPTHS } from '../config/constants';
 import { getArcadeBody } from '../utils/assertions';
+import { attachEntityArt } from '../render/EntityArt';
+import { ART_TEXTURES } from '../render/artCatalog';
 
 export class GrowthBud extends Phaser.Physics.Arcade.Sprite {
   private emerging = true;
@@ -19,6 +21,7 @@ export class GrowthBud extends Phaser.Physics.Arcade.Sprite {
     body.setEnable(false);
     body.setSize(24, 24);
     body.setOffset(4, 8);
+    attachEntityArt(this, ART_TEXTURES.growth, { width: 44 });
 
     scene.tweens.add({
       targets: this,

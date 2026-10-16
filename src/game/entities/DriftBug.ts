@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { BaseEnemy } from './BaseEnemy';
 import { getArcadeBody } from '../utils/assertions';
+import { attachEntityArt } from '../render/EntityArt';
+import { ART_TEXTURES } from '../render/artCatalog';
 
 export class DriftBug extends BaseEnemy {
   private direction: -1 | 1 = -1;
@@ -19,6 +21,11 @@ export class DriftBug extends BaseEnemy {
     body.setSize(28, 20);
     body.setOffset(2, 8);
     body.setVelocityX(-this.speed);
+    attachEntityArt(this, ART_TEXTURES.bug, {
+      width: 46,
+      bodyFeet: true,
+      originY: 0.91
+    });
   }
 
   updateEnemy(time: number): void {
@@ -30,7 +37,10 @@ export class DriftBug extends BaseEnemy {
 
     if (this.x < this.homeX - this.patrolDistance / 2 || body.blocked.left) {
       this.direction = 1;
-    } else if (this.x > this.homeX + this.patrolDistance / 2 || body.blocked.right) {
+    } else if (
+      this.x > this.homeX + this.patrolDistance / 2 ||
+      body.blocked.right
+    ) {
       this.direction = -1;
     }
 

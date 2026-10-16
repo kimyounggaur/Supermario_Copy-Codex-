@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { DEPTHS } from '../config/constants';
 import { getArcadeBody } from '../utils/assertions';
+import { trackDecorativeTween } from '../render/reducedMotion';
 
 export class FinishGate extends Phaser.Physics.Arcade.Image {
   constructor(
@@ -21,7 +22,7 @@ export class FinishGate extends Phaser.Physics.Arcade.Image {
     body.setSize(58, 92);
     body.setOffset(3, 8);
 
-    scene.tweens.add({
+    const pulse = scene.tweens.add({
       targets: this,
       scaleX: 1.05,
       scaleY: 0.97,
@@ -30,5 +31,6 @@ export class FinishGate extends Phaser.Physics.Arcade.Image {
       repeat: -1,
       ease: 'Sine.easeInOut'
     });
+    trackDecorativeTween(scene, pulse);
   }
 }

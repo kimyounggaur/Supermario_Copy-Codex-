@@ -1,153 +1,158 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ControlsHelp } from './components/ControlsHelp';
-import { GameCanvas } from './components/GameCanvas';
-import { LandingPanel } from './components/LandingPanel';
-import { TextureGallery } from './components/TextureGallery';
-import { EditorRoot } from './editor/EditorRoot';
-import { LevelListPanel } from './editor/components/LevelListPanel';
-import { createLevelFromTemplate } from './editor/data/levelTemplates';
-import { EditorPersistenceSystem } from './editor/systems/EditorPersistenceSystem';
-import { safeLevelFileName } from './editor/systems/EditorSerializationSystem';
-import type { LevelData } from './game/data/LevelData';
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { GameCanvas } from "./components/GameCanvas";
+import { EditorRoot } from "./editor/EditorRoot";
+import { LevelListPanel } from "./editor/components/LevelListPanel";
+import { createLevelFromTemplate } from "./editor/data/levelTemplates";
+import { EditorPersistenceSystem } from "./editor/systems/EditorPersistenceSystem";
+import { safeLevelFileName } from "./editor/systems/EditorSerializationSystem";
+import type { LevelData } from "./game/data/LevelData";
+import { HomeScreen } from "./ui/screens/HomeScreen";
+import {
+  getPreferences,
+  prefersReducedMotion,
+  subscribePreferences,
+} from "./ui/state/preferences";
 
-type AppMode = 'menu' | 'story' | 'editor' | 'levels';
-type MenuPanel = 'controls' | 'credits' | null;
+type AppMode = "menu" | "story" | "editor" | "levels";
 
 export default function App() {
-  const isTextureGallery = window.location.pathname === '/debug/texture-gallery';
   const persistence = useMemo(() => new EditorPersistenceSystem(), []);
-  const [mode, setMode] = useState<AppMode>('menu');
-  const [currentLevel, setCurrentLevel] = useState<LevelData | undefined>();
+  const [mode, setMode] = useState<AppMode>("menu");
+  const [currentLevel, setCurrentLevel] = useState<LevelData>();
   const [playtestLevel, setPlaytestLevel] = useState<LevelData | null>(null);
   const [levelsVersion, setLevelsVersion] = useState(0);
-  const [menuPanel, setMenuPanel] = useState<MenuPanel>(null);
-  const savedLevels = useMemo(() => persistence.listLevels(), [persistence, levelsVersion]);
+  const [error, setError] = useState("");
+  const preferences = useSyncExternalStore(
+    subscribePreferences,
+    getPreferences,
+  );
+  const savedLevels = useMemo(
+    () => persistence.listLevels(),
+    [persistence, levelsVersion],
+  );
 
   useEffect(() => {
-    const handleComplete = (event: Event) => {
-      const detail = (event as CustomEvent<{ levelId?: string; score?: number; elapsedSeconds?: number }>).detail;
-      if (!detail?.levelId || typeof detail.score !== 'number' || typeof detail.elapsedSeconds !== 'number') {
-        return;
-      }
-
-      persistence.recordPlayResult(detail.levelId, {
-        cleared: true,
-        elapsedSeconds: detail.elapsedSeconds,
-        score: detail.score
-      });
-      setLevelsVersion((version) => version + 1);
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => {
+      document.documentElement.dataset.reducedMotion = String(
+        prefersReducedMotion(),
+      );
     };
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, [preferences]);
 
-    window.addEventListener('sky-sprout:level-complete', handleComplete);
-    return () => window.removeEventListener('sky-sprout:level-complete', handleComplete);
+  useEffect(() => {
+    const saveError = () =>
+      setError(
+        "최고 기록을 브라우저에 저장하지 못했어요. 플레이는 계속할 수 있어요.",
+      );
+    const handleComplete = (event: Event) => {
+      const detail = (
+        event as CustomEvent<{
+          levelId?: string;
+          score?: number;
+          elapsedSeconds?: number;
+        }>
+      ).detail;
+      if (
+        !detail?.levelId ||
+        typeof detail.score !== "number" ||
+        typeof detail.elapsedSeconds !== "number"
+      )
+        return;
+      try {
+        persistence.recordPlayResult(detail.levelId, {
+          cleared: true,
+          elapsedSeconds: detail.elapsedSeconds,
+          score: detail.score,
+        });
+        setLevelsVersion((version) => version + 1);
+      } catch {
+        setError("플레이 기록을 저장하지 못했어요.");
+      }
+    };
+    window.addEventListener("sky-sprout:level-complete", handleComplete);
+    window.addEventListener("sky-sprout:save-error", saveError);
+    return () => {
+      window.removeEventListener("sky-sprout:level-complete", handleComplete);
+      window.removeEventListener("sky-sprout:save-error", saveError);
+    };
   }, [persistence]);
 
-  const exportSavedLevel = (levelId: string) => {
-    const json = persistence.exportLevel(levelId);
-    const level = persistence.loadLevel(levelId);
-    if (!json || !level) {
-      return;
-    }
-
-    const blob = new Blob([json], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = safeLevelFileName(level.name);
-    link.click();
-    URL.revokeObjectURL(link.href);
+  const home = () => {
+    setPlaytestLevel(null);
+    setError("");
+    setMode("menu");
+    setLevelsVersion((value) => value + 1);
   };
+  const create = () => {
+    setCurrentLevel(createLevelFromTemplate("emptyIsland"));
+    setError("");
+    setMode("editor");
+  };
+  const guarded = (action: () => void) => {
+    try {
+      action();
+      setError("");
+      setLevelsVersion((value) => value + 1);
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "작업을 완료하지 못했어요. 다시 시도해 주세요.",
+      );
+    }
+  };
+  const exportSavedLevel = (levelId: string) =>
+    guarded(() => {
+      const json = persistence.exportLevel(levelId);
+      const level = persistence.loadLevel(levelId);
+      if (!json || !level) throw new Error("레벨을 내보낼 수 없어요.");
+      const url = URL.createObjectURL(
+        new Blob([json], { type: "application/json" }),
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = safeLevelFileName(level.name);
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
 
   return (
-    <main className="app-shell" aria-label="Sky Sprout Runner game">
-      {isTextureGallery ? <TextureGallery /> : null}
-      {!isTextureGallery ? (
-        <>
-      <LandingPanel />
-      {mode === 'menu' ? (
-        <section className="main-menu" aria-label="Main menu">
-          <h1>Sky Sprout Runner</h1>
-          <div className="main-menu__actions">
-            <button
-              type="button"
-              onClick={() => {
-                setCurrentLevel(undefined);
-                setMode('story');
-              }}
-            >
-              Play Story
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setCurrentLevel(createLevelFromTemplate('emptyIsland'));
-                setMode('editor');
-              }}
-            >
-              Create Level
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setLevelsVersion((version) => version + 1);
-                setMode('levels');
-              }}
-            >
-              My Levels
-            </button>
-            <button type="button" onClick={() => setMenuPanel('controls')}>
-              Controls
-            </button>
-            <button type="button" onClick={() => setMenuPanel('credits')}>
-              Credits
-            </button>
-          </div>
-          {menuPanel ? (
-            <div
-              className="menu-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-label={menuPanel === 'controls' ? 'Controls' : 'Credits'}
-            >
-              <div className="menu-modal__body">
-                {menuPanel === 'controls' ? (
-                  <>
-                    <h2>Controls</h2>
-                    <p>Move with arrow keys or A and D. Jump with Space, W, or Up.</p>
-                    <p>Hold Shift to run. Press P or Escape to pause. Press R to restart.</p>
-                  </>
-                ) : (
-                  <>
-                    <h2>Credits</h2>
-                    <p>Sky Sprout Runner is an original cloud-island platformer prototype.</p>
-                    <p>Built with React, Phaser, and the Sky Forge level editor.</p>
-                  </>
-                )}
-                <button type="button" onClick={() => setMenuPanel(null)}>
-                  Close
-                </button>
-              </div>
-            </div>
-          ) : null}
-        </section>
-      ) : null}
-
-      {mode === 'story' ? <GameCanvas skipMenu level={currentLevel} /> : null}
-
-      {mode === 'editor' ? (
-        <EditorRoot
-          initialLevel={currentLevel}
-          onBack={() => {
-            setLevelsVersion((version) => version + 1);
-            setMode('menu');
+    <main className="app-shell" aria-label="Sky Sprout Runner">
+      {mode === "menu" ? (
+        <HomeScreen
+          onStory={() => {
+            setCurrentLevel(undefined);
+            setMode("story");
           }}
-          onTestPlay={(level) => {
-            setCurrentLevel(level);
-            setPlaytestLevel(level);
+          onEditor={create}
+          onLevels={() => {
+            setLevelsVersion((value) => value + 1);
+            setMode("levels");
           }}
-          onStateChange={(editorState) => setCurrentLevel(editorState.level)}
         />
       ) : null}
-
+      {mode === "story" ? (
+        <GameCanvas skipMenu level={currentLevel} onHome={home} />
+      ) : null}
+      {mode === "editor" ? (
+        <div
+          className="editor-session"
+          inert={Boolean(playtestLevel)}
+          aria-hidden={playtestLevel ? true : undefined}
+        >
+          <EditorRoot
+            initialLevel={currentLevel}
+            active={!playtestLevel}
+            onBack={home}
+            onTestPlay={(level) => setPlaytestLevel(structuredClone(level))}
+            onStateChange={(editorState) => setCurrentLevel(editorState.level)}
+          />
+        </div>
+      ) : null}
       {playtestLevel ? (
         <div className="playtest-layer">
           <GameCanvas
@@ -158,45 +163,67 @@ export default function App() {
           />
         </div>
       ) : null}
-
-      {mode === 'levels' ? (
+      {mode === "levels" ? (
         <LevelListPanel
           levels={savedLevels}
-          onBack={() => setMode('menu')}
-          onEdit={(levelId) => {
-            const level = persistence.loadLevel(levelId);
-            if (level) {
+          onBack={home}
+          onCreate={create}
+          error={error}
+          onEdit={(id) =>
+            guarded(() => {
+              const level = persistence.loadLevel(id);
+              if (!level)
+                throw new Error(
+                  "레벨을 열 수 없어요. JSON 파일을 확인해 주세요.",
+                );
               setCurrentLevel(level);
-              setMode('editor');
-            }
-          }}
-          onPlay={(levelId) => {
-            const level = persistence.loadLevel(levelId);
-            if (level) {
-              setCurrentLevel(level);
-              setMode('story');
-            }
-          }}
-          onDuplicate={(levelId) => {
-            persistence.duplicateLevel(levelId);
-            setLevelsVersion((version) => version + 1);
-          }}
+              setMode("editor");
+            })
+          }
+          onPlay={(id) =>
+            guarded(() => {
+              const level = persistence.loadLevel(id);
+              if (!level) throw new Error("레벨을 열 수 없어요.");
+              setCurrentLevel(structuredClone(level));
+              setMode("story");
+            })
+          }
+          onDuplicate={(id) =>
+            guarded(() => {
+              persistence.duplicateLevel(id);
+            })
+          }
           onExport={exportSavedLevel}
-          onDelete={(levelId) => {
-            persistence.deleteLevel(levelId);
-            setLevelsVersion((version) => version + 1);
-          }}
+          onDelete={(id) => guarded(() => persistence.deleteLevel(id))}
           onImport={(file) => {
-            void file.text().then((json) => {
-              persistence.importLevel(json);
-              setLevelsVersion((version) => version + 1);
-            });
+            void file
+              .text()
+              .then((json) => {
+                const imported = persistence.importLevel(json);
+                if (!imported.ok) {
+                  setError(imported.error ?? "레벨 파일을 열 수 없어요.");
+                  return;
+                }
+                setError("");
+                setLevelsVersion((value) => value + 1);
+              })
+              .catch(() =>
+                setError("레벨 파일을 읽을 수 없어요. 파일을 다시 선택하세요."),
+              );
           }}
         />
       ) : null}
-
-      {mode === 'menu' ? <ControlsHelp /> : null}
-        </>
+      {error && mode !== "levels" ? (
+        <div className="global-toast" role="status">
+          {error}
+          <button
+            type="button"
+            onClick={() => setError("")}
+            aria-label="알림 닫기"
+          >
+            ×
+          </button>
+        </div>
       ) : null}
     </main>
   );

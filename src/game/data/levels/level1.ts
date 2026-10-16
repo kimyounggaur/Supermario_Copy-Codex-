@@ -1,5 +1,24 @@
 import type { LevelData, TerrainDef } from '../../types';
-import { floatingBlockCluster } from './levelUtils';
+
+type FloatingBlockKind = Extract<TerrainDef['kind'], 'skyBrick' | 'runeBox'>;
+
+const floatingBlockSize = 44;
+
+function floatingBlockCluster(
+  id: string,
+  startX: number,
+  y: number,
+  pattern: FloatingBlockKind[]
+): TerrainDef[] {
+  return pattern.map((kind, index) => ({
+    id: `${id}-${index + 1}`,
+    kind,
+    x: startX + index * floatingBlockSize,
+    y,
+    width: floatingBlockSize,
+    height: floatingBlockSize
+  }));
+}
 
 const floatingBlocks: TerrainDef[] = [
   ...floatingBlockCluster('tutorial-floating-block', 930, 390, [

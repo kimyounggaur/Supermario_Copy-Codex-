@@ -5,7 +5,12 @@ interface MobileEditorControlsProps {
   onTest: () => void;
 }
 
-export function MobileEditorControls({ onCopy, onDelete, onSave, onTest }: MobileEditorControlsProps) {
+export function MobileEditorControls({
+  onCopy,
+  onDelete,
+  onSave,
+  onTest,
+}: MobileEditorControlsProps) {
   return (
     <div className="mobile-editor-controls" aria-label="Mobile editor actions">
       <button type="button" onClick={onCopy}>

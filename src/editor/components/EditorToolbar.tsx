@@ -1,8 +1,8 @@
-import type { EditorState } from '../schemas/levelDefaults';
-
+import type { EditorState } from "../schemas/levelDefaults";
+import type { EditorSaveStatus } from "../EditorRoot";
 interface EditorToolbarProps {
   state: EditorState;
-  saveStatus: 'Saved' | 'Unsaved' | 'Autosaved';
+  saveStatus: EditorSaveStatus;
   canUndo: boolean;
   canRedo: boolean;
   onBack: () => void;
@@ -15,55 +15,106 @@ interface EditorToolbarProps {
   onSettings: () => void;
   onHelp: () => void;
 }
-
-export function EditorToolbar({
-  state,
-  saveStatus,
-  canUndo,
-  canRedo,
-  onBack,
-  onSave,
-  onUndo,
-  onRedo,
-  onTest,
-  onValidate,
-  onExport,
-  onSettings,
-  onHelp
-}: EditorToolbarProps) {
+const statusLabels: Record<EditorSaveStatus, string> = {
+  saved: "저장 완료",
+  unsaved: "미저장",
+  saving: "저장 중…",
+  draft: "임시 보관됨 · 저장 필요",
+  error: "저장 실패 · 내보내기 권장",
+};
+export function EditorToolbar(props: EditorToolbarProps) {
   return (
-    <div className="editor-toolbar" role="toolbar" aria-label="Editor toolbar">
-      <button type="button" aria-label="Back to menu" onClick={onBack}>
-        Back
-      </button>
-      <button type="button" aria-label="Save level" onClick={onSave}>
-        Save
-      </button>
-      <button type="button" aria-label="Undo edit" onClick={onUndo} disabled={!canUndo}>
-        Undo
-      </button>
-      <button type="button" aria-label="Redo edit" onClick={onRedo} disabled={!canRedo}>
-        Redo
-      </button>
-      <button type="button" aria-label="Test play level" onClick={onTest}>
-        Test
-      </button>
-      <button type="button" aria-label="Validate level" onClick={onValidate}>
-        Validate
-      </button>
-      <button type="button" aria-label="Export level" onClick={onExport}>
-        Export
-      </button>
-      <button type="button" aria-label="Open level settings" onClick={onSettings}>
-        Settings
-      </button>
-      <button type="button" aria-label="Open shortcut help" onClick={onHelp}>
-        Help
+    <header className="editor-toolbar">
+      <button
+        type="button"
+        data-testid="editor-back"
+        aria-label="홈으로"
+        onClick={props.onBack}
+      >
+        ← 홈
       </button>
       <div className="editor-toolbar__title">
-        <strong>{state.level.name}</strong>
-        <span>{saveStatus}</span>
+        <span>Sky Forge Editor</span>
+        <h1 title={props.state.level.name}>{props.state.level.name}</h1>
+        <span
+          className={`save-status save-status--${props.saveStatus}`}
+          data-testid="editor-save-status"
+          role="status"
+          aria-live="polite"
+        >
+          {statusLabels[props.saveStatus]}
+        </span>
       </div>
-    </div>
+      <div
+        className="editor-toolbar__history"
+        role="group"
+        aria-label="편집 기록"
+      >
+        <button
+          type="button"
+          data-testid="editor-undo"
+          aria-label="되돌리기"
+          title="되돌리기 (Ctrl Z)"
+          disabled={!props.canUndo}
+          onClick={props.onUndo}
+        >
+          ↶
+        </button>
+        <button
+          type="button"
+          data-testid="editor-redo"
+          aria-label="다시 실행"
+          title="다시 실행 (Ctrl Shift Z)"
+          disabled={!props.canRedo}
+          onClick={props.onRedo}
+        >
+          ↷
+        </button>
+      </div>
+      <div className="editor-toolbar__actions">
+        <button
+          type="button"
+          data-testid="editor-save"
+          onClick={props.onSave}
+          disabled={props.saveStatus === "saving"}
+        >
+          저장
+        </button>
+        <button
+          type="button"
+          data-testid="editor-test"
+          className="button--primary"
+          onClick={props.onTest}
+        >
+          ▶ 테스트 플레이
+        </button>
+      </div>
+      <div className="editor-toolbar__secondary">
+        <button
+          type="button"
+          data-testid="editor-validate"
+          onClick={props.onValidate}
+        >
+          검증
+        </button>
+        <button
+          type="button"
+          data-testid="editor-export"
+          onClick={props.onExport}
+        >
+          JSON 내보내기
+        </button>
+        <button
+          type="button"
+          data-testid="editor-settings"
+          onClick={props.onSettings}
+        >
+          섬 설정
+        </button>
+        <button type="button" data-testid="editor-help" onClick={props.onHelp}>
+          도움말
+        </button>
+      </div>
+    </header>
   );
 }

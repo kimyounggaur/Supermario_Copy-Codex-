@@ -1,9 +1,17 @@
 import Phaser from 'phaser';
 import { DEPTHS } from '../config/constants';
 import { getArcadeBody } from '../utils/assertions';
+import { attachHazardArt } from '../render/EntityArt';
+import { ART_TEXTURES } from '../render/artCatalog';
 
 export class Hazard extends Phaser.Physics.Arcade.Image {
-  constructor(scene: Phaser.Scene, x: number, y: number, width: number, height: number) {
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) {
     super(scene, x, y, 'thorn-crystal');
     scene.add.existing(this);
     scene.physics.add.existing(this);
@@ -15,5 +23,6 @@ export class Hazard extends Phaser.Physics.Arcade.Image {
     body.setImmovable(true);
     body.setSize(width * 0.82, height * 0.72);
     body.setOffset(width * 0.09, height * 0.2);
+    attachHazardArt(this, ART_TEXTURES.thorn);
   }
 }
